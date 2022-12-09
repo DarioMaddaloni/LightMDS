@@ -1,0 +1,5 @@
+#!/bin/bash
+git add *
+git commit -m "Nuova versione repo"
+git push -u origin main
+
