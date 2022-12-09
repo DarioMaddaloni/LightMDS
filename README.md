@@ -2,4 +2,4 @@
 
 Descrizione del progetto
 
-Fatto bene!
+Fatto male!
