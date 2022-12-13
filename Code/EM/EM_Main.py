@@ -9,5 +9,6 @@ imageName= "palla1"
 image = cv2.imread("../../Samples/EM/{}.png", 0)
 
 #Visualizing the image
+show(image)
 
 
