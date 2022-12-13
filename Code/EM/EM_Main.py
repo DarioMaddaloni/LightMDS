@@ -13,14 +13,14 @@ import Expectation as ex
 imageName = "pallaPaint3soloCenterCenter"
 image = cv2.imread("./../../Samples/EM/"+imageName+".png", 0)
 
-currentRadius=60
-currentCx=200
-currentCy=180
+currentRadius=70
+currentCx=190
+currentCy=186
 xk=120
 yk=180
-print(ex.deltak(xk, yk, currentCx, currentCy, currentRadius))
-print(ex.counterOfTotalPoints(image))
+value, image=ex.counterOfCirclePoints(image, currentCx, currentCy, currentRadius, 1000)
 
+print(value);
 
 #Visualizing the image
 show(image)
