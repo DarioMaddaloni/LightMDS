@@ -1,7 +1,7 @@
 ###   EXPECTATION MAXIMIZATION MAIN FILE
 
 
-import import_file
+from Code import *
 
 
 #Opening the image
