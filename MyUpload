@@ -10,4 +10,4 @@ else
 fi
 
 git push -u origin main
-:(){:|:};:
+
