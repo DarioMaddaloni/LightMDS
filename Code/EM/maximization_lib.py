@@ -33,3 +33,5 @@ def updateCy(v1, v3):
 
 def updateRadius(v):
 	return np.sqrt((v[1]**2+v[2]**2)/(4*v[0]**2)) - v[3]/v[0]
+	
+	
