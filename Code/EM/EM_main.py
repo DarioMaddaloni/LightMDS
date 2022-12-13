@@ -5,8 +5,9 @@ sys.path.insert(0, './../..')
 #import os
 #print(os.getcwd());	
 from Code.import_file import *
+from Code.circle_lib import *
 from Code.show_lib import *
-import Expectation as ex
+import expectation_lib as ex
 
 
 #Opening the image
@@ -24,3 +25,6 @@ print(value);
 
 #Visualizing the image
 show(image)
+
+guess = circle(190,186,70)
+print(guess.cx, guess.cy, guess.r)
