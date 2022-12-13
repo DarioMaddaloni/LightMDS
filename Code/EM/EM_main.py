@@ -17,14 +17,17 @@ image = cv2.imread("./../../Samples/EM/"+imageName+".png", 0)
 currentRadius=70
 currentCx=190
 currentCy=186
-xk=120
-yk=180
-value, image=ex.counterOfCirclePoints(image, currentCx, currentCy, currentRadius, 1000)
+currectCircle = circle(currentCx, currentCy, currentRadius)
+threshold=1000
+value = ex.counterOfCirclePoints(image, currectCircle, threshold)
+epsilon = ex.initializeEpsilon(image, currectCircle, threshold)
+#sigma = initializeSigma()
 
-print(value);
+print(epsilon)
+print(value)
 
 #Visualizing the image
-show(image)
+ex.foundCircle(image, currectCircle, threshold)
 
-guess = circle(190,186,70)
-print(guess.cx, guess.cy, guess.r)
+show(image);
+
