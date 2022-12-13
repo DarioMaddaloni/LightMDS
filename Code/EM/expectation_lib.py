@@ -13,12 +13,12 @@ def wk(dk, sigma, epsilon):
 def initializeEpsilon(image, circleObj, threshold):
 	return 1 - (counterOfCirclePoints(image, circleObj, threshold))/(counterOfTotalPoints(image))
 
-def initializeSigma(allTheDk):
-	mean=np.sum(allTheDk)/len(allTheDk)
-	total=0
-	for i in range(len(allTheDk)):
-		total=total+(allTheDk[i]*mean)**2
-	return np.sqrt(total)/2
+#def initializeSigma(allTheDk):
+#	mean=np.sum(allTheDk)/len(allTheDk)
+#	total=0
+#	for i in range(len(allTheDk)):
+#		total=total+(allTheDk[i]*mean)**2
+#	return np.sqrt(total)/2
 
 def updateEpsilon(image, circleObj, threshold):
 	return initializeEpsilon(image, circleObj, threshold)
@@ -46,12 +46,22 @@ def counterOfCirclePoints(image, circleObj, threshold):#da usare in initializeEp
 				counter=counter+1
 	return counter
 
+def updateOfThePointsOfBoundary(image, circleObj, threshold):
+	points = []
+	for xk in range(image.shape[0]):
+		for yk in range(image.shape[1]):
+			delta=deltak(xk, yk, circleObj)
+			if delta<threshold and image[xk][yk]==255:	
+				points.append([xk, yk]);
+	return points
+
 def foundCircle(image, circleObj, threshold):
+	fakeImage=image.copy()
 	for xk in range(image.shape[0]):
 		for yk in range(image.shape[1]):
 			delta=deltak(xk, yk, circleObj)
 			if delta<threshold:
-				image[xk][yk]=155
-	return image
+				fakeImage[xk][yk]=155
+	return fakeImage
 
 
