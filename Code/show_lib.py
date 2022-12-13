@@ -1,5 +1,6 @@
-import import_file
+from Code.import_file import *
 
 def show(image):
-    plt.imshow(image,cmap='gray')
-    plt.show()
+	print(image);
+	plt.imshow(image,cmap='gray')
+	plt.show()
