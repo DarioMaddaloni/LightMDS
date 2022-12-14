@@ -12,55 +12,92 @@ import maximization_lib as ma
 
 
 #Opening the image
-imageName = "pallaPaint3soloCenterCenter"
-image = cv2.imread("./../../Samples/EM/"+imageName+".png", 0)
+images = ["linearNoise.png" , "pallaPaint2ExternalNoise.png", "pallaPaint3LinearNoise.png" ,  "pallaPaint3soloTopLeft.png" , "pallaPaint4soloCenterRight.png", "pallaPaint1soloDownLeft.png"  ,  "pallaPaint3ExternalNoise.png"  ,"pallaPaint3soloCenterCenter.png" , "pallaPaint3soloTopRight.png" , "randomNoise.png", "pallaPaint1soloTopCenter.png" , "pallaPaint3InternalNoise.png" , "pallaPaint3soloDownRight.png" ,"pallaPaint4soloCenterCenter.png"]
 
-currentRadius=70
-currentCx=190
-currentCy=186
-currentCircle = circle(currentCx, currentCy, currentRadius)
-threshold=1000
+for imageName in images:
+	image = cv2.imread("./../../Samples/EM/"+imageName, 0)
 
-points = [] #qui ci sono tutti i punti della circonferenza stimata
-allTheDk = []
-allTheWk = []
+	currentCx=200 #180
+	currentCy=200 #200
+	currentRadius=90 #90
+	currentCircle = circle(currentCx, currentCy, currentRadius)
+	threshold=100000
+	show(ex.foundCircle(image, currentCircle, 200))
 
-#EXPECTATION
-points = ex.updateOfThePointsOfBoundary(image, currentCircle, threshold)
-for i in range(len(points)):
-	allTheDk.append(ex.deltak(points[i][0], points[i][1], currentCircle))
-currentEpsilon = ex.initializeEpsilon(image, currentCircle, threshold)
-currentSigma = ex.initializeSigma(allTheDk)
-for i in range(len(points)):
-	allTheWk.append(ex.wk(allTheDk[i], currentSigma, currentEpsilon))
+	points = [] #qui ci sono tutti i punti della circonferenza stimata
+	allTheDk = []
+	allTheWk = []
 
-#MAXIMIZATION
-M = ma.computeM(points)
-W = ma.computeW(points, currentSigma, currentEpsilon, currentCircle)
-v = ma.computeEigenvector(M, W)
-currentCircle = ma.updateValues(v)
+	#EXPECTATION
+	points = ex.updateOfThePointsOfBoundary(image, currentCircle, threshold)
 
+	for i in range(len(points)):
+		allTheDk.append(ex.deltak(points[i][0], points[i][1], currentCircle))
 
-#for i in range(10): #qui ho messo una condizione a caso, ma sarà bene capire quando ferma expectation maximization
-#	#Inizio la EXPECTATION
-#	#Trovo i punti del bordo della circonferenza
-#	points = ex.updateOfThePointsOfBoundary(image, currentCircle, threshold)
-#	#Calcolo i deltak per ogni punto del bordo stimato
-#	for i in range(len(points)):
-#		allTheDk.append(ex.deltak(points[0], points[1], circleObj))
-#	#Calcolo l'epsilon attraverso il numero di punti totali
-#	currentEpsilon = ex.updateEpsilon(image, currentCircle, threshold)
-#	#Calcolo la sigma come descritto nel paper
-#	currentSigma = ex.updateSigma(allTheDk)
-#	#Calcolo tutti i pesi di tutti i punti sul bordo stimato
-#	for i in range(len(points)):
-#		allTheWk.append(ex.wk(allTheDk[i], currentSigma, currentEpsilon))
-#
-#	#Inizio la MAXIMIZATION
-#	#sigma = initializeSigma()
-#	currentCircle.cx, currentCircle.cy, currentCircle.r = updateValues(v1,v2,v3,v4)
+	currentEpsilon = ex.initializeEpsilon(image, currentCircle, threshold)
 
-#Visualizing the image
-show(ex.foundCircle(image, currentCircle, threshold))
-show(image)
+	currentSigma = 3000 #ex.initializeSigma(allTheDk)
+	#print("sigma = ", currentSigma)
 
+	for i in range(len(points)):
+		allTheWk.append(ex.wk(allTheDk[i], currentSigma, currentEpsilon))
+
+	#MAXIMIZATION
+	#print("\nnumeratore di wk = ", np.exp((-(allTheDk[1]**2))/(2*(currentSigma**2))))
+	#print("\nepsilon = ",currentEpsilon)
+	M = ma.computeM(points)
+	#print("\nM:\n", M)
+	W = ma.computeW(allTheWk)
+	#print("\nall the wk: \n", allTheWk)
+	v = ma.computeEigenvector(M, W)
+	#show(ex.foundCircle(image, currentCircle, threshold))
+	currentCircle = ma.updateValues(v)
+
+	print("\nnuovo cerchio di parametri:\n", currentCircle.cx)
+	print(currentCircle.cy)
+	print(currentCircle.r)
+	#show(ex.foundCircle(image, currentCircle, threshold))
+
+	#Visualizing the image
+#	show(ex.foundCircle(image, currentCircle, 200))
+	#show(image)
+
+	for u in range(5):
+		#EXPECTATION
+		points = ex.updateOfThePointsOfBoundary(image, currentCircle, threshold)
+		
+		allTheDk = []
+		for i in range(len(points)):
+			allTheDk.append(ex.deltak(points[i][0], points[i][1], currentCircle))
+
+		currentEpsilon = ex.initializeEpsilon(image, currentCircle, threshold)
+
+		currentSigma = 3000 #ex.initializeSigma(allTheDk)
+		#print("sigma = ", currentSigma)
+		
+		allTheWk = []
+		for i in range(len(points)):
+			allTheWk.append(ex.wk(allTheDk[i], currentSigma, currentEpsilon))
+
+		#MAXIMIZATION
+		#print("\nnumeratore di wk = ", np.exp((-(allTheDk[1]**2))/(2*(currentSigma**2))))
+		#print("\nepsilon = ",currentEpsilon)
+		M = ma.computeM(points)
+		print("M shape = ", M.shape)
+		#print("\nM:\n", M)
+		W = ma.computeW(allTheWk)
+		print("W shape = ", W.shape)
+		#print("\nall the wk: \n", allTheWk)
+		v = ma.computeEigenvector(M, W)
+		#show(ex.foundCircle(image, currentCircle, threshold))
+		currentCircle = ma.updateValues(v)
+
+		print("\nnuovo cerchio di parametri:\n", currentCircle.cx)
+		print(currentCircle.cy)
+		print(currentCircle.r)
+
+		#Visualizing the image
+	#	show(ex.foundCircle(image, currentCircle, 200))
+		#show(image)
+
+	show(ex.foundCircle(image, currentCircle, 200))
