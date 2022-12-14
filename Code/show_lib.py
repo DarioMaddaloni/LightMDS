@@ -5,4 +5,3 @@ def show(image):
 	plt.show()
 	
 #def showCircleOnImage(image,circle):
-    

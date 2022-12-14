@@ -10,9 +10,9 @@ from Code.show_lib import *
 import expectation_lib as ex
 import maximization_lib as ma
 
-
+listOfImages = []
 #Opening the image
-images = ["linearNoise.png" , "pallaPaint2ExternalNoise.png", "pallaPaint3LinearNoise.png" ,  "pallaPaint3soloTopLeft.png" , "pallaPaint4soloCenterRight.png", "pallaPaint1soloDownLeft.png"  ,  "pallaPaint3ExternalNoise.png"  ,"pallaPaint3soloCenterCenter.png" , "pallaPaint3soloTopRight.png" , "randomNoise.png", "pallaPaint1soloTopCenter.png" , "pallaPaint3InternalNoise.png" , "pallaPaint3soloDownRight.png" ,"pallaPaint4soloCenterCenter.png"]
+images = ["pallaPaint2ExternalNoise.png", "pallaPaint3LinearNoise.png" ,  "pallaPaint3soloTopLeft.png" , "pallaPaint4soloCenterRight.png", "pallaPaint1soloDownLeft.png"]#,  "pallaPaint3ExternalNoise.png"  ,"pallaPaint3soloCenterCenter.png" , "pallaPaint3soloTopRight.png" , "randomNoise.png", "pallaPaint1soloTopCenter.png" , "pallaPaint3InternalNoise.png" , "pallaPaint3soloDownRight.png" ,"pallaPaint4soloCenterCenter.png", "linearNoise.png"]
 
 for imageName in images:
 	image = cv2.imread("./../../Samples/EM/"+imageName, 0)
@@ -21,8 +21,8 @@ for imageName in images:
 	currentCy=200 #200
 	currentRadius=90 #90
 	currentCircle = circle(currentCx, currentCy, currentRadius)
-	threshold=100000
-	show(ex.foundCircle(image, currentCircle, 200))
+	threshold=10000
+	#show(ex.foundCircle(image, currentCircle, 200))
 
 	points = [] #qui ci sono tutti i punti della circonferenza stimata
 	allTheDk = []
@@ -62,7 +62,7 @@ for imageName in images:
 #	show(ex.foundCircle(image, currentCircle, 200))
 	#show(image)
 
-	for u in range(5):
+	for u in range(3):
 		#EXPECTATION
 		points = ex.updateOfThePointsOfBoundary(image, currentCircle, threshold)
 		
@@ -99,5 +99,15 @@ for imageName in images:
 		#Visualizing the image
 	#	show(ex.foundCircle(image, currentCircle, 200))
 		#show(image)
+		
+	listOfImages.append(ex.foundCircle(image, currentCircle, 500))
 
-	show(ex.foundCircle(image, currentCircle, 200))
+#Qua sto rappresentando tutte le immagini con la nostra stima in un solo plot
+xFigure = np.floor(np.sqrt(len(images)))
+yFigure = np.ceil(np.sqrt(len(images)))
+plt.figure(figsize=(15, 6))
+for i in range(len(images)):
+	plt.subplot(xFigure, yFigure, i+1)
+	plt.title("Image: " + images[i])
+	plt.imshow(listOfImages[i],cmap='gray')
+plt.show()
