@@ -28,10 +28,6 @@ def computeEigenvector(M, W):
 def updateValues(v):#forse input sarà un vettore?
 	v = [v[i][0] for i in range(4)]
 	return circle(updateCx(v[0], v[1]), updateCy(v[0], v[2]), updateRadius(v[0], v[1], v[2], v[3]))#sostituire con oggetto della classe circle
-	
-def updateCircle(v):#forse input sarà un vettore?
-	v = [v[i][0] for i in range(4)]
-	return circle(updateCx(v[0], v[1]), updateCy(v[0], v[2]), updateRadius(v[0], v[1], v[2], v[3]))#sostituire con oggetto della classe circle
 
 def updateCx(v1, v2):
 	return -v2/(2*v1) #Ritorna una lista... Lunga uno con solo il valore..

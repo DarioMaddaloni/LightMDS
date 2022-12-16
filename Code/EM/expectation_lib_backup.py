@@ -2,14 +2,12 @@ from Code.import_file import *
 from Code.show_lib import *
 from Code.circle_lib import *
 
-
 def norm(value, sigma):
 	return scipy.stats.norm.pdf(value, loc=0, scale=sigma)
 
 def deltak(xk, yk, circleObj):
 	cx, cy, r = circleObj.cx, circleObj.cy, circleObj.r
-	rk_quad = (xk-cx)**2 + (yk - cy)**2
-	return np.abs( rk_quad - r**2 ), rk_quad
+	return np.abs( (xk-cx)**2 + (yk - cy)**2 - r**2 )
 
 def wk(dk, sigma, p):
 	value = norm(dk, sigma)
@@ -19,8 +17,8 @@ def wk(dk, sigma, p):
 #	value = norm(dk, sigma)
 #	return (value) / (value+epsilon)
 	
-def computeP(image, circleObj):
-	numberOfUniformPoints = counterOfTotalPoints(image) - expectedNumberOfCirclePoints(image, circleObj, circleObj.sigma)
+def computeP(image, circleObj, sigma):
+	numberOfUniformPoints = counterOfTotalPoints(image) - expectedNumberOfCirclePoints(image, circleObj, sigma)
 	return numberOfUniformPoints / (image.shape[0]*image.shape[1])
 
 def initializeSigma(allTheDk): #varianza di allTheDk
@@ -33,9 +31,6 @@ def updateSigma(allTheWk, allTheDk): #preso dal paper di Hany Farid
 	for i in range(len(allTheWk)):
 		allTheProduct.append(allTheWk[i]*(allTheDk[i])**2)
 	return np.sum(allTheProduct)/np.sum(allTheWk)
-	
-	
-	
 
 def counterOfTotalPoints(image): #da usare in initializeP ed updateP
 	counter=0
