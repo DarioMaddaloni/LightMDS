@@ -9,7 +9,7 @@ from Code.circle_lib import circle
 from Code.show_lib import *
 import expectation_lib as ex
 import maximization_lib as ma
-from interaction_lib import guess
+from interaction_lib import guess3
 
 listOfImages = []
 #Opening the images
@@ -78,7 +78,7 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
         C = circle(image.shape[0]/2,image.shape[1]/2, min(image.shape)/3)
     
     if visual:
-        matplotlib.rcParams['figure.figsize'] = [15, 7]
+        matplotlib.rcParams['figure.figsize'] = [15, 15]
     
         #printing the original image
         plt.subplot(121)
@@ -162,7 +162,7 @@ for imageName in images:#for in the paint-generated image database
 	EM(image, visual = 1)"""
 	
 	
-for i in range(10):#loop in the DallE2-generated database
+for i in range(7,10):#loop in the DallE2-generated database
     print("Image {}".format(i)+".\n")
     image = cv2.imread("./../../Samples/DallE2/DallE2_{}.png".format(i), 0)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
@@ -173,5 +173,5 @@ for i in range(10):#loop in the DallE2-generated database
     #    plt.show()
         
     
-    EM(image, visual = 1, C = guess(image), rounds = 1)
+    EM(image, visual = 1, C = guess3(image), rounds = 1)
 
