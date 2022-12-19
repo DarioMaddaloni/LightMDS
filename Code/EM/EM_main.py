@@ -9,6 +9,7 @@ from Code.circle_lib import circle
 from Code.show_lib import *
 import expectation_lib as ex
 import maximization_lib as ma
+from interaction_lib import guess
 
 listOfImages = []
 #Opening the images
@@ -49,10 +50,10 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
     
     
     #printing the processed image also displaying our guess
-    plt.subplot(122)
-    plt.title('After.')  
-    plt.imshow(image, cmap = 'gray')
-    plt.show()
+#    plt.subplot(122)
+#    plt.title('After.')  
+#    plt.imshow(image, cmap = 'gray')
+#    plt.show()
     
     
     
@@ -69,8 +70,8 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
             else:
                 image[i,j] = 0
                 
-    plt.imshow(image, cmap = 'gray')
-    plt.show()
+#    plt.imshow(image, cmap = 'gray')
+#    plt.show()
 
     #setting the circle guess in case it is not defined
     if C == 0:#if we have no initial guess we start from the circle centered in the center of the image and with radious 1/3 of the smallest edge of the image
@@ -91,8 +92,11 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
         plt.show()
         
     C.sigma = 30000#300000
+    threshold =ex.computeThreshold(0.8, C.sigma)
     
     for _ in range(rounds):
+    
+        
         
         #cycling in the image pixels in order to compute:
         #   the values delta_k for each pixel of the image (stored in dk_all)
@@ -106,7 +110,7 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
             for j in range(image.shape[1]):
                 dk, rk_quad = ex.deltak(i,j,C)
                 dk_all.append(dk)
-                if image[i,j] == 255:
+                if (image[i,j] == 255) and (dk < threshold):
                     M.append([i**2+j**2,i,j,1])
                     dk_1.append(dk)
                     rk_quad_1.append(rk_quad)
@@ -115,7 +119,7 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
         
         print("Sigma = {}.\n".format(C.sigma))
         p = ((len(M) - np.sum(scipy.stats.norm.pdf(dk_all, loc=0, scale = C.sigma)))/(image.shape[0]*image.shape[1])) 
-        print("P = {}.\n".format(p))       
+        #print("P = {}.\n".format(p))       
         
         wk_1 = np.array([ex.wk(d, C.sigma, p) for d in dk_1])
         
@@ -133,6 +137,11 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
             plt.title('Circle extimation after {} step.'.format(_+1))
             plt.imshow(C.onImage(image))
             plt.show()
+            
+            
+            
+            
+        threshold =ex.computeThreshold(0.8, C.sigma)
 
     if visual:
         #representation of the extimated circle on the original imageName
@@ -164,5 +173,5 @@ for i in range(10):#loop in the DallE2-generated database
     #    plt.show()
         
     
-    EM(image, visual = 1, C = ex.guess(image))
+    EM(image, visual = 1, C = guess(image), rounds = 1)
 
