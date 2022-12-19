@@ -7,16 +7,66 @@ sys.path.insert(0, './../..')
 from Code.import_file import *
 from Code.circle_lib import *
 from Code.show_lib import *
-import expectation_lib as ex
-import maximization_lib as ma
+import expectation_lib_backup as ex
+import maximization_lib_backup as ma
+
+
+
+
+#definition of sharpening used in preprocessing
+from scipy.ndimage.filters import gaussian_filter
+def sharpening(img, sigma, alpha):
+  filter_blurred_f = gaussian_filter(img, sigma)
+  attacked = img + alpha * (img - filter_blurred_f)
+  return attacked
+
+
+
 
 listOfImages = []
 #Opening the image
-images = ["pallaPaint4soloCenterRight.png"]#, "pallaPaint2ExternalNoise.png", "pallaPaint3LinearNoise.png" ,  "pallaPaint3soloTopLeft.png" , "pallaPaint4soloCenterRight.png", "pallaPaint1soloDownLeft.png",  "pallaPaint3ExternalNoise.png"  ,"pallaPaint3soloCenterCenter.png" , "pallaPaint3soloTopRight.png" , "randomNoise.png", "pallaPaint1soloTopCenter.png" , "pallaPaint3InternalNoise.png" , "pallaPaint3soloDownRight.png" ,"pallaPaint4soloCenterCenter.png", "linearNoise.png"]
+images = ["pallaPaint3LinearNoise.png","pallaPaint3ExternalNoise.png" ]# ,"pallaPaint3soloCenterCenter.png" , "pallaPaint3soloTopRight.png" , "randomNoise.png", "pallaPaint1soloTopCenter.png" , "pallaPaint3InternalNoise.png" , "pallaPaint3soloDownRight.png" ,"pallaPaint4soloCenterCenter.png", "linearNoise.png","pallaPaint4soloCenterRight.png"], "pallaPaint2ExternalNoise.png", "pallaPaint3LinearNoise.png" ,  "pallaPaint3soloTopLeft.png" , "pallaPaint4soloCenterRight.png", "pallaPaint1soloDownLeft.png"]
 
 for imageName in images:
 	print(imageName)
 	image = cv2.imread("./../../Samples/EM/"+imageName, 0)
+	
+#	image = cv2.imread("./../../Samples/DallE2/DallE2_{}.png".format(2), 0)
+#	image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
+#	
+#	
+#	#processing the image
+#	if len(image.shape) == 3:#in that case we are analizing an RGB images
+#		image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) #converting the image to grayscale, non so se giusta conversione
+#	else:
+#		assert (len(image.shape) == 2) # in that case we expect the image to be already in grayscale format
+#		image = image
+#		
+#		
+#	plt.subplot(121)
+#	plt.title('Before.')
+#	plt.imshow(image, cmap = 'gray')
+#	
+#	   
+#	#image = cv2.equalizeHist(image)#histogram equalization
+#	
+#	image= sharpening(image, 1, 1)
+#	
+#	
+#	#printing the processed image also displaying our guess
+#	plt.subplot(122)
+#	plt.title('After.')  
+#	plt.imshow(image, cmap = 'gray')
+#	plt.show()
+#	
+#	
+#	
+#	
+#	#edge detection and threshold	  
+#	image = cv2.blur(image, (25,25))
+#	image = cv2.Canny(image, threshold1=60, threshold2=60)
+#	
+	
 
 	currentCx=200 #180
 	currentCy=200 #200
@@ -64,7 +114,7 @@ for imageName in images:
 	
 	for u in range(3):
 		print(u)
-		show(ex.foundCircle(image, currentCircle, 200))
+		show(ex.foundCircle(image, currentCircle, 600))
 		points = [] #qui ci sono tutti i punti della circonferenza stimata
 		
 
@@ -104,7 +154,7 @@ for imageName in images:
 		#show(ex.foundCircle(image, currentCircle, 200))
 		#show(image)
 		
-	listOfImages.append(ex.foundCircle(image, currentCircle, 200))
+	listOfImages.append(ex.foundCircle(image, currentCircle, 600))
 #
 #ua sto rappresentando tutte le immagini con la nostra stima in un solo plot
 xFigure = np.floor(np.sqrt(len(images)))

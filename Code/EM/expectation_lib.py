@@ -2,6 +2,25 @@ from Code.import_file import *
 from Code.show_lib import *
 from Code.circle_lib import *
 
+def onclick(event):
+        if event.xdata != None and event.ydata != None:
+            global param
+            param.append(event.xdata)
+            param.append(event.ydata)
+
+def guess(image):
+    ax = plt.gca()
+    fig = plt.gcf()
+    implot = ax.imshow(image)
+    global param
+    param = []
+    
+    cid = fig.canvas.mpl_connect('button_press_event', onclick)
+    plt.title("Select the center of the image vith a first click and a point on the circunference with a second click.")
+    plt.show()
+    print(param)
+    return circle(int(param[0]),int(param[1]),int(np.sqrt((param[0]-param[2])**2+(param[1]-param[3])**2)))
+
 
 def norm(value, sigma):
 	return scipy.stats.norm.pdf(value, loc=0, scale=sigma)
