@@ -16,9 +16,9 @@ import maximization_lib_backup as ma
 #definition of sharpening used in preprocessing
 from scipy.ndimage.filters import gaussian_filter
 def sharpening(img, sigma, alpha):
-  filter_blurred_f = gaussian_filter(img, sigma)
-  attacked = img + alpha * (img - filter_blurred_f)
-  return attacked
+	filter_blurred_f = gaussian_filter(img, sigma)
+	attacked = img + alpha * (img - filter_blurred_f)
+	return attacked
 
 
 
