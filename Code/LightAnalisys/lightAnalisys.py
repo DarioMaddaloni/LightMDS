@@ -24,3 +24,6 @@ def Y(a, b, x, y, z):
 
 def Normal(circle, x, y):
 	return (x-circle.cx, y-circle.cy, np.sqrt(circle.radius**2-(x-circle.cx)**2+(y-circle.cx)))
+
+def A(points)
+	

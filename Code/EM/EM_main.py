@@ -20,12 +20,12 @@ listOfImages = []
 from scipy.ndimage.filters import gaussian_filter
 def sharpening(img, sigma, alpha):
 	filter_blurred_f = gaussian_filter(img, sigma)
-	attacked = img + alpha * (img - filter_blurred_f)
-	return attacked
+	sharpened = img + alpha * (img - filter_blurred_f)
+	return sharpened
 
 
 
-def EM(originalImage, C = 0, rounds = 4, visual = 0):
+def EM(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1):
 	"""
 		originalImage := the image where to find the circle
 		C := the (optional) guess of the circle object
@@ -46,9 +46,8 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
 	#image = cv2.equalizeHist(image)#histogram equalization
 
 	print("sharpening")
-	image= sharpening(image, 1, 1)
-	
-	
+	image= sharpening(image, 0.12, 3)
+
 	#printing the processed image also displaying our guess
 #	plt.subplot(122)
 #	plt.title('After.')	
@@ -58,9 +57,10 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
 
 	#edge detection and threshold
 	print("blurring")
-	image = cv2.blur(image, (25,25))
+	image = cv2.blur(image, (10, 10))
+	#Try sharpening instead of blurring and anjust the thresholds of cannying
 	print("Cannying") #https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
-	image = cv2.Canny(image, threshold1=20, threshold2=40) #60, 100
+	image = cv2.Canny(image, threshold1=50, threshold2=70) #60, 100
 
 	print("black or white")
 	for i in range(image.shape[0]):
@@ -82,21 +82,24 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
 		matplotlib.rcParams['figure.figsize'] = [15, 15]
 	
 		#printing the original image
-		plt.subplot(121)
-		plt.title('Original image.')
-		plt.imshow(originalImage)
+#		plt.subplot(121)
+#		plt.title('Original image.')
+#		plt.imshow(originalImage)
 		
 		#printing the processed image also displaying our guess
-		plt.subplot(122)
+		plt.subplot(111)
 		plt.title('Processed image with initial circle guess.')
 		plt.imshow(C.onImage(image))
 		plt.show()
 
-	C.sigma = 30000#300000
-	threshold = ex.computeThreshold(0.8, C.sigma)
-	
+	C.sigma = C.r * 30 #30000 #300000
+	print("raggio = {}".format(C.r))
+	confidenceInterval = 0.9
+	print("\nconfidenceInterval = {}".format(confidenceInterval))
+	threshold = ex.computeThreshold(confidenceInterval, C.sigma)
+
 	for _ in range(rounds):
-		print("Eseguo il round {} con parametri\n".format(_+1))
+		print("Execute round {}/{} with parameters:\n".format(_+1, rounds))
 		#cycling in the image pixels in order to compute:
 		#	 the values delta_k for each pixel of the image (stored in dk_all)
 		#	 the values delta_k for each pixel of the image representing one (or 255) (stored in dk_1)
@@ -116,7 +119,9 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
 		#computations using the quantities computed above
 		
 		print("Sigma = {}.\n".format(C.sigma))
-		p = ((len(M) - np.sum(scipy.stats.norm.pdf(dk_all, loc=0, scale = C.sigma)))/(image.shape[0]*image.shape[1])) 
+		p = ((len(M) - np.sum(scipy.stats.norm.pdf(dk_all, loc=0, scale = C.sigma)))/(image.shape[0]*image.shape[1]))
+		if p<0:
+			break
 		print("p = {}.\n".format(p))		 
 
 		wk_1 = np.array([ex.wk(d, C.sigma, p) for d in dk_1])
@@ -136,25 +141,28 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0):
 			plt.imshow(C.onImage(image))
 			plt.show()
 
-		threshold =ex.computeThreshold(0.8, C.sigma)
+		confidenceInterval = confidenceInterval - (confidenceInterval/rounds)
+		print("\nconfidenceInterval = {}".format(confidenceInterval))
+		threshold =ex.computeThreshold(confidenceInterval, C.sigma)
 
-#	if visual:
-	#representation of the estimated circle on the original imageName
-	matplotlib.rcParams['figure.figsize'] = [7, 7]
-	plt.title('Final estimation')
-	plt.imshow(C.onImage(originalImage))
-	plt.show() 
+	if visualFinal:
+		#representation of the estimated circle on the original imageName
+		matplotlib.rcParams['figure.figsize'] = [7, 7]
+		plt.title('Final estimation')
+		plt.imshow(C.onImage(image))
+		#plt.imshow(C.onImage(originalImage))
+		plt.show()
 
 
-"""		
+"""
 for imageName in images:#for in the paint-generated image database
 	print("Image: "+imageName+".\n\n")
 	image = cv2.imread("./../../Samples/EM/"+imageName, 0)
 	EM(image, visual = 1)
 """
-	
-	
-for i in range(7,8):#loop in the DallE2-generated database
+
+
+for i in range(1,10): #loop in the DallE2-generated database
 	print("Image {}".format(i)+".\n")
 	image = cv2.imread("./../../Samples/DallE2/DallE2_{}.png".format(i), 0)
 	image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
@@ -164,5 +172,5 @@ for i in range(7,8):#loop in the DallE2-generated database
 	#	plt.imshow(C.onImage(image))
 	#	plt.show()
 
-	EM(image, C = guess3(image), rounds = 5, visual = 0)
+	EM(image, C = guess3(image), rounds = 5, visual = 0, visualFinal = 1) #C = guess3(image)
 

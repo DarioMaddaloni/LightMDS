@@ -3,10 +3,10 @@ from Code.show_lib import *
 from Code.circle_lib import *
 
 def onclick(event):
-		if event.xdata != None and event.ydata != None:
-			global param
-			param.append(event.xdata)
-			param.append(event.ydata)
+	if event.xdata != None and event.ydata != None:
+		global param
+		param.append(event.xdata)
+		param.append(event.ydata)
 
 def guess(image):
 	ax = plt.gca()
@@ -52,9 +52,6 @@ def updateSigma(allTheWk, allTheDk): #preso dal paper di Hany Farid
 	for i in range(len(allTheWk)):
 		allTheProduct.append(allTheWk[i]*(allTheDk[i])**2)
 	return np.sum(allTheProduct)/np.sum(allTheWk)
-	
-	
-	
 
 def counterOfTotalPoints(image): #da usare in initializeP ed updateP
 	counter=0
