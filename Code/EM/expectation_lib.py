@@ -14,9 +14,9 @@ def guess(image):
 	implot = ax.imshow(image)
 	global param
 	param = []
-	
+
 	cid = fig.canvas.mpl_connect('button_press_event', onclick)
-	plt.title("Select the center of the image vith a first click and a point on the circunference with a second click.")
+	plt.title("Select the center of the image vith a first click and a point on the circumference with a second click.")
 	plt.show()
 	print(param)
 	return circle(int(param[0]),int(param[1]),int(np.sqrt((param[0]-param[2])**2+(param[1]-param[3])**2)))

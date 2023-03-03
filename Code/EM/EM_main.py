@@ -2,10 +2,12 @@
 
 import sys
 sys.path.insert(0, './../..')
+import copy
 #import os
 #print(os.getcwd());	
 from Code.import_file import *
 from Code.circle_lib import circle
+from Code.eraser_lib import eraser
 from Code.show_lib import *
 import expectation_lib as ex
 import maximization_lib as ma
@@ -39,28 +41,28 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1):
 		assert (len(originalImage.shape) == 2) # in that case we expect the image to be already in grayscale format
 		image = originalImage
 
-	plt.subplot(121)
-	plt.title('Before.')
-	plt.imshow(image, cmap = 'gray')
+#	plt.subplot(121)
+#	plt.title('Before.')
+#	plt.imshow(originalImage, cmap = 'gray')
+#	plt.show()
 
-	#image = cv2.equalizeHist(image)#histogram equalization
+#	image = cv2.equalizeHist(image)#histogram equalization
 
 	print("sharpening")
 	image= sharpening(image, 0.12, 3)
 
-	#printing the processed image also displaying our guess
+#	printing the processed image also displaying our guess
 #	plt.subplot(122)
 #	plt.title('After.')	
 #	plt.imshow(image, cmap = 'gray')
 #	plt.show()
 
-
 	#edge detection and threshold
 	print("blurring")
-	image = cv2.blur(image, (10, 10))
+	image = cv2.blur(image, (11, 11))
 	#Try sharpening instead of blurring and anjust the thresholds of cannying
 	print("Cannying") #https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
-	image = cv2.Canny(image, threshold1=50, threshold2=70) #60, 100
+	image = cv2.Canny(image, threshold1=30, threshold2=70) #60, 100
 
 	print("black or white")
 	for i in range(image.shape[0]):
@@ -69,32 +71,39 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1):
 				image[i,j] = 255
 			else:
 				image[i,j] = 0
-				
-#	plt.imshow(image, cmap = 'gray')
-#	plt.show()
+
+	#Erase noise by hand
+	screen = "Figure 1"
+	cv2.namedWindow(screen, cv2.WINDOW_NORMAL)
+	eraserObj = eraser(screen, image, radius = 30)
+	cv2.setMouseCallback(screen, eraserObj.handleMouseEvent)
+	# show initial image
+	cv2.imshow(screen, image)
+	cv2.waitKey(0)
+	cv2.destroyAllWindows()
 
 	#setting the circle guess in case it is not defined
 	if C == 0:#if we have no initial guess we start from the circle centered in the center of the image and with radious 1/3 of the smallest edge of the image
 		C = circle(image.shape[0]/2,image.shape[1]/2, min(image.shape)/3)
-	
+
 	print("Show images")
-	if True:
+	if visual:
 		matplotlib.rcParams['figure.figsize'] = [15, 15]
-	
+
 		#printing the original image
 #		plt.subplot(121)
 #		plt.title('Original image.')
 #		plt.imshow(originalImage)
 		
 		#printing the processed image also displaying our guess
-		plt.subplot(111)
 		plt.title('Processed image with initial circle guess.')
 		plt.imshow(C.onImage(image))
 		plt.show()
 
-	C.sigma = C.r * 30 #30000 #300000
+	C.sigma = C.r * 200
 	print("raggio = {}".format(C.r))
-	confidenceInterval = 0.9
+	confidenceIntervalInitial = 0.9
+	confidenceInterval = confidenceIntervalInitial
 	print("\nconfidenceInterval = {}".format(confidenceInterval))
 	threshold = ex.computeThreshold(confidenceInterval, C.sigma)
 
@@ -103,11 +112,12 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1):
 		#cycling in the image pixels in order to compute:
 		#	 the values delta_k for each pixel of the image (stored in dk_all)
 		#	 the values delta_k for each pixel of the image representing one (or 255) (stored in dk_1)
-		#	 the matrix M		 
+		#	 the matrix M
 		M = []
 		rk_quad_1 = []
 		dk_1 = []
 		dk_all = []
+
 		for i in range(image.shape[0]):
 			for j in range(image.shape[1]):
 				dk, rk_quad = ex.deltak(i,j,C)
@@ -119,10 +129,11 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1):
 		#computations using the quantities computed above
 		
 		print("Sigma = {}.\n".format(C.sigma))
+
 		p = ((len(M) - np.sum(scipy.stats.norm.pdf(dk_all, loc=0, scale = C.sigma)))/(image.shape[0]*image.shape[1]))
-		if p<0:
+		print("p = {}.\n".format(p))
+		if p < 0:
 			break
-		print("p = {}.\n".format(p))		 
 
 		wk_1 = np.array([ex.wk(d, C.sigma, p) for d in dk_1])
 
@@ -141,16 +152,15 @@ def EM(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1):
 			plt.imshow(C.onImage(image))
 			plt.show()
 
-		confidenceInterval = confidenceInterval - (confidenceInterval/rounds)
+		confidenceInterval = confidenceInterval - (confidenceIntervalInitial/rounds)**(1.2)
 		print("\nconfidenceInterval = {}".format(confidenceInterval))
 		threshold =ex.computeThreshold(confidenceInterval, C.sigma)
 
 	if visualFinal:
-		#representation of the estimated circle on the original imageName
+		#visualize the actual guess
 		matplotlib.rcParams['figure.figsize'] = [7, 7]
 		plt.title('Final estimation')
 		plt.imshow(C.onImage(image))
-		#plt.imshow(C.onImage(originalImage))
 		plt.show()
 
 
@@ -172,5 +182,5 @@ for i in range(1,10): #loop in the DallE2-generated database
 	#	plt.imshow(C.onImage(image))
 	#	plt.show()
 
-	EM(image, C = guess3(image), rounds = 5, visual = 0, visualFinal = 1) #C = guess3(image)
+	EM(image, C = guess3(image), rounds = 7, visual = 0, visualFinal = 1) #C = guess3(image)
 

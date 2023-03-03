@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class circle:
 	def __init__(self, cx, cy, r, sigma = 3000): # constructor of the class
 		self.cx = cx
@@ -17,15 +16,16 @@ class circle:
 						for k in range(3):
 							output[i,j,k] = 255
 					if (abs(np.sqrt((i-self.cx)**2+(j-self.cy)**2)-self.r) < width):#adding points of the circle
-						output[i,j,0] = 255
-						output[i,j,1] = 0
+						output[i,j,0] = 0
+						output[i,j,1] = 255
 						output[i,j,2] = 0
-		else:#RGB image
+		else: #RGB image
 			output = image
 			for i in range(image.shape[0]):
 				for j in range(image.shape[1]):
 					if (abs(np.sqrt((i-self.cx)**2+(j-self.cy)**2)-self.r) < width):#adding points of the circle
-						output[i,j,0] = 255
-						output[i,j,1] = 0
+						output[i,j,0] = 0
+						output[i,j,1] = 255
 						output[i,j,2] = 0
-		return output 
+		return output
+
