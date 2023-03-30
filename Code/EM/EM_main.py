@@ -11,7 +11,7 @@ from Code.eraser_lib import eraser
 from Code.show_lib import *
 import expectation_lib as ex
 import maximization_lib as ma
-from interaction_lib import guess3
+from interaction_lib import guess3, guess3evo
 
 listOfImages = []
 #Opening the images
@@ -182,5 +182,5 @@ for i in range(1,10): #loop in the DallE2-generated database
 	#	plt.imshow(C.onImage(image))
 	#	plt.show()
 
-	EM(image, C = guess3(image), rounds = 7, visual = 0, visualFinal = 1) #C = guess3(image)
+	EM(image, C = guess3evo(image), rounds = 7, visual = 0, visualFinal = 1) #C = guess3evo(image)
 
