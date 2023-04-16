@@ -129,7 +129,7 @@ def guess3(image):#guessing 3 points in the borderof the circle
 	
 	
 	
-def guess3evo(image, max_y_difference = 5):#guessing 3 points in the border of the circle. max_y_difference is the maximal acceptable difference between two y coordinates in order to find the straigt lines intersection
+def guess3evo(image, max_y_difference = 20):#guessing 3 points in the border of the circle. max_y_difference is the maximal acceptable difference between two y coordinates in order to find the straigt lines intersection
          
     plt.imshow(image)
     

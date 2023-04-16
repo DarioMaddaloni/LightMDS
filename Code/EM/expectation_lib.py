@@ -29,6 +29,10 @@ def deltak(xk, yk, circleObj):
 	cx, cy, r = circleObj.cx, circleObj.cy, circleObj.r
 	rk_quad = (xk-cx)**2 + (yk - cy)**2
 	return np.abs( rk_quad - r**2 ), rk_quad
+	
+def deltak_evo(xk, yk, circleObj): #not returning the rk_quand since no more needed
+	cx, cy, r = circleObj.cx, circleObj.cy, circleObj.r
+	return np.abs( (xk-cx)**2 + (yk - cy)**2 - r**2 )
 
 def wk(dk, sigma, p):
 	value = norm(dk, sigma)
@@ -37,6 +41,12 @@ def wk(dk, sigma, p):
 	return (value) / (value+epsilon)
 #	value = norm(dk, sigma)
 #	return (value) / (value+epsilon)
+
+
+def wk_evo(dk, sigma, epsilon):
+	value = np.exp( - (dk ** 2) / (2 * (sigma ** 2)))
+	return (value) / (value + epsilon)
+
 	
 def computeP(image, circleObj):
 	numberOfUniformPoints = counterOfTotalPoints(image) - expectedNumberOfCirclePoints(image, circleObj, circleObj.sigma)
@@ -99,4 +109,15 @@ def foundCircle(image, circleObj, threshold):
 				fakeImage[xk][yk]=155
 	return fakeImage
 
+def plot_prob_curve_evo(sigma, epsilon):
+    
+    x = np.arange(0, 20, 1)
 
+    graph = ex.wk_evo(x **2, sigma, p)
+    
+    plt.title("Sigma = {}, Epsilon = {}".format(sigma,p))
+    plt.ylim([0,1]) # setting the y interval to the unitary one
+
+    plt.plot(x, graph)
+
+    plt.show()
