@@ -2,9 +2,6 @@
 
 import sys
 sys.path.insert(0, './../..')
-import copy
-#import os
-#print(os.getcwd());	
 from Code.import_file import *
 from Code.circle_lib import circle
 from Code.eraser_lib import eraser
@@ -207,7 +204,7 @@ def EM_evo(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1, erase 
 			else:
 				image[i,j] = 0
 
-	if eraser: #Erase noise by hand
+	if erase: #Erase noise by hand
 		screen = "Figure 1"
 		cv2.namedWindow(screen, cv2.WINDOW_NORMAL)
 		eraserObj = eraser(screen, image, radius = 30)
@@ -221,7 +218,8 @@ def EM_evo(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1, erase 
 	if C == 0: #if we have no initial guess we start from the circle centered in the center of the image and with radious 1/3 of the smallest edge of the image
 		C = circle(image.shape[0]/2,image.shape[1]/2, min(image.shape)/3)
 		C.sigma = C.r * 200
-	else: C.sigma = 80 #the value sigma differs in the case of accurate initial guess or random guess
+	else: C.sigma = 80
+	 #the value sigma differs in the case of accurate initial guess or random guess
 
 	print("Show images")
 	if visual:
@@ -239,7 +237,7 @@ def EM_evo(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1, erase 
 
 	print("raggio = {}".format(C.r))
 	
-	epsilon = 0.66
+	epsilon = 0.2
 	
 	
 		
@@ -255,13 +253,14 @@ def EM_evo(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1, erase 
 		
 		
 		if visual:
-			ex.plot_prob_curve(C.sigma, epsilon)
+			ex.plot_prob_curve_evo(C.sigma, epsilon)
 
 		for i in range(image.shape[0]):
 			for j in range(image.shape[1]):
-				dk = ex.deltak_evo(i,j,C)
+				
 								
-				if (image[i,j] == 255 and dk < 1000):# la seconda condizione è messa per dare un significativo speedup
+				if (image[i,j] == 255 and (dk := ex.deltak_evo(i,j,C)) < 3000):# la seconda condizione è messa per dare un significativo speedup
+				    #dk = ex.deltak_evo(i,j,C)
 				    M.append([i**2+j**2,i,j,1])
 				    dk_1.append(dk)
 				    
@@ -271,6 +270,9 @@ def EM_evo(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1, erase 
 
 		
 		wk_1 = np.array([ex.wk_evo(d, C.sigma, epsilon) for d in dk_1])
+		wk_2 = np.array([ex.wk_pro(d, C.sigma, epsilon) for d in dk_1])
+		#print(wk_1.size)
+		#print([w for w in wk_1 if (w > 0.01)])
 
 		W = np.diag(wk_1)
 
@@ -278,7 +280,9 @@ def EM_evo(originalImage, C = 0, rounds = 4, visual = 0, visualFinal = 1, erase 
 
 		C = ma.updateCircle(v)
 
-		C.sigma = ex.updateSigma(wk_1, dk_1) #np.sum(np.array(dk_1)*wk_1)/np.sum(wk_1)#update sigma		
+		C.sigma = ex.updateSigma(wk_2, dk_1) #np.sum(np.array(dk_1)*wk_1)/np.sum(wk_1)#update sigma		
+		
+		print(C.cx)
 
 
 		if visual:
@@ -305,8 +309,8 @@ for i in range(1,10): #loop in the DallE2-generated database
 	image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
 
 	C = guess3evo(image)
-	rounds = 7
+	rounds = 10
 
-	EM(image, C, rounds, visual = 0, visualFinal = 1, erase = 0)
+	#EM(image, C, rounds, visual = 0, visualFinal = 1, erase = 0)
 	EM_evo(image, C, rounds, visual = 0, visualFinal = 1, erase = 0)
 
