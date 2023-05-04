@@ -1,11 +1,14 @@
 import numpy as np
 
 class circle:
-	def __init__(self, cx, cy, r, sigma = 3000): # constructor of the class
+	def __init__(self, cx, cy, r, sigma = 40, epsilon = 0.2): # constructor of the class
 		self.cx = cx
 		self.cy = cy
 		self.r = r
 		self.sigma = sigma
+		self.epsilon = epsilon
+
+
 
 	def onImage(self, image, width = 2): # return a RGB image with the grayscale original image in background and the circle guess in red
 		if (len(image.shape) == 2):#grayscale image

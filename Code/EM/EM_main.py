@@ -9,139 +9,165 @@ from Code.eraser_lib import eraser
 from Code.show_lib import *
 import expectation_lib as ex
 import maximization_lib as ma
-from interaction_lib import guess3, guess3evo
-
-# definition of sharpening used in preprocessing
+from interaction_lib import interactiveGuess
 from scipy.ndimage import gaussian_filter
 
 
-def sharpening(img, sigma, alpha):
-    filter_blurred_f = gaussian_filter(img, sigma)
-    sharpened = img + alpha * (img - filter_blurred_f)
-    return sharpened
+def preprocessing(originalImage, erase):
+	print("\n --- START OF PREPROCESSING --- ")
+
+	# Converting the image from RGB to grayscale
+	print("RGB to grayscale...")
+	if len(originalImage.shape) == 3:  # In that case we are analyzing an RGB images
+		image = cv2.cvtColor(originalImage, cv2.COLOR_RGB2GRAY)  # Converting the image to grayscale
+	else:
+		assert (len(originalImage.shape) == 2)  # In that case we expect the image to be already in grayscale format
+		image = originalImage
+
+	# Sharpening
+	print("Sharpening...")
+	sigma = 0.12
+	alpha = 3
+	filter_blurred_f = gaussian_filter(image, sigma)
+	image = image + alpha * (image - filter_blurred_f)
+
+	# Edge detection and threshold
+	print("Blurring...")
+	image = cv2.blur(image, (11, 11))
+	print("Cannying...")  # https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
+	image = cv2.Canny(image, threshold1=30, threshold2=70)
+
+	print("Grayscale to black or white...")
+	for i in range(image.shape[0]):
+		for j in range(image.shape[1]):
+			if image[i, j] > 125:
+				image[i, j] = 255
+			else:
+				image[i, j] = 0
+
+	if erase:  # Erase noise by hand
+		print("Eraser...")
+		screen = "Figure 1"
+		cv2.namedWindow(screen, cv2.WINDOW_NORMAL)
+		eraserObj = eraser(screen, image, radius=30)
+		cv2.setMouseCallback(screen, eraserObj.handleMouseEvent)
+		# Show initial image
+		cv2.imshow(screen, image)
+		cv2.waitKey(0)
+		cv2.destroyAllWindows()
+
+	print(" --- END OF PREPROCESSING --- \n")
+
+	return image
 
 
-def EM_evo(originalImage, C=0, rounds=4, visual=0, visualFinal=1, erase=1):
-    """
+def EM(originalImage, C=0, rounds=0, visual=0, erase=1):
+	"""
 		originalImage := the image where to find the circle
-		C := the (optional) guess of the circle object
+		C := the  guess of the circle object
+		rounds := the desired number of rounds
 		visual := run the function showing (1) or not showing the prints in each step of the algorithm
+		erase := the optional usage of the eraser to delete by hand points related to outliers
 	"""
 
-    print("From RGB to GRAY")  # processing the image
-    if len(originalImage.shape) == 3:  # in that case we are analizing an RGB images
-        image = cv2.cvtColor(originalImage, cv2.COLOR_RGB2GRAY)  # converting the image to grayscale
-    else:
-        assert (len(originalImage.shape) == 2)  # in that case we expect the image to be already in grayscale format
-        image = originalImage
+	# Preprocessing
+	image = preprocessing(originalImage, erase)
 
-    print("sharpening")
-    image = sharpening(image, 0.12, 3)
+	print("\n --- START OF E.M. ALGORITHM --- ")
 
-    # edge detection and threshold
-    print("blurring")
-    image = cv2.blur(image, (11, 11))
-    # Try sharpening instead of blurring and anjust the thresholds of cannying
-    print("Cannying")  # https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
-    image = cv2.Canny(image, threshold1=30, threshold2=70)  # 60, 100
+	# Setting the circle guess in case it is not defined
+	if C == 0:  # if we have no initial guess we start from the circle centered in the center of the image and with radious 1/3 of the smallest edge of the image
+		print("Setting auto guess...")
+		C = circle(image.shape[0] / 2, image.shape[1] / 2, min(image.shape) / 3, sigma=80, epsilon=0.3)
 
-    print("black or white")
-    for i in range(image.shape[0]):
-        for j in range(image.shape[1]):
-            if image[i, j] > 125:
-                image[i, j] = 255
-            else:
-                image[i, j] = 0
+	if visual:
+		# Plotting the processed image also displaying the initial guess
+		print("Showing rocessed image with initial circle guess...")
+		matplotlib.rcParams['figure.figsize'] = [15, 15]
+		plt.title('Processed image with initial circle guess.')
+		plt.imshow(C.onImage(image))
+		plt.show()
 
-    if erase:  # Erase noise by hand
-        screen = "Figure 1"
-        cv2.namedWindow(screen, cv2.WINDOW_NORMAL)
-        eraserObj = eraser(screen, image, radius=30)
-        cv2.setMouseCallback(screen, eraserObj.handleMouseEvent)
-        # show initial image
-        cv2.imshow(screen, image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+	# Speedup condition parameters
+	max_range = 100
+	sigma_range = 25
 
-    # setting the circle guess in case it is not defined
-    if C == 0:  # if we have no initial guess we start from the circle centered in the center of the image and with radious 1/3 of the smallest edge of the image
-        C = circle(image.shape[0] / 2, image.shape[1] / 2, min(image.shape) / 3)
-        C.sigma = C.r * 200
-    else:
-        C.sigma = 80
-    # the value sigma differs in the case of accurate initial guess or random guess
+	for round in range(1, rounds + 1):
+		print("\nExecute round {}/{} with parameters:\nEpsilon = {}       Sigma = {}      Max Range = {}".format(round,
+																											   rounds,
+																											   C.epsilon,
+																											   C.sigma,
+																											   max_range))
 
-    print("Show images")
-    if visual:
-        matplotlib.rcParams['figure.figsize'] = [15, 15]
+		if visual:  # Plotting the actual probability curve depending on the distance from the circle edge
+			ex.plot_prob_curve_evo(C.sigma, C.epsilon)
 
-        # printing the processed image also displaying our guess
-        plt.title('Processed image with initial circle guess.')
-        plt.imshow(C.onImage(image))
-        plt.show()
+		M = []
+		sigma_num = 0
+		sigma_den = 0
+		w = []
 
-    print("raggio = {}".format(C.r))
+		# cycling in the image pixels in order to compute:
+		#	 the values delta_k for each pixel of the image representing one (or 255) (stored in dk_1)
+		#	 the matrix M
+		#	 the list of the probabilities w_k
+		# 	 the new valiue for the patrameter sigma
+		for i in range(image.shape[0]):
+			for j in range(image.shape[1]):
+				if image[i, j] == 255 and (
+						dk := ex.deltak_evo(i, j,
+											C)) < max_range ** 2:  # The second condition provides speedup
+					#
+					M.append([i ** 2 + j ** 2, i, j, 1])
+					w.append(ex.wk(dk, C.sigma, C.epsilon))
+					if dk < sigma_range ** 2:  # Second speedup condition
+						# Calculations regarding the update of the parameter sigma
+						wk_s = ex.wk_sigma(dk, C.sigma, C.epsilon)
+						sigma_num += wk_s * dk
+						sigma_den += wk_s
 
-    epsilon = 0.2
+		# Updating the actual guess
+		W = np.diag(np.array(w))
+		v = ma.computeEigenvector(M, W)
+		ma.updateCircle(C, v)
 
-    print("epsilon = {}.\n".format(epsilon))
+		# Updating the parameter sigma
+		oldSigma = C.sigma
+		C.sigma = sigma_num / sigma_den
 
-    for _ in range(rounds):
-        print("Execute round {}/{} with parameters:\n".format(_ + 1, rounds))
-        # cycling in the image pixels in order to compute:
-        #	 the values delta_k for each pixel of the image representing one (or 255) (stored in dk_1)
-        #	 the matrix M
-        M = []
-        dk_1 = []
+		if abs(
+				oldSigma - C.sigma) < 0.5:
+			print("\nA small sigma update has happened. Iteration stopped." )
+			break  # Breaking the for loop if there is no relevant change for the parameter sigma
 
-        if visual:
-            ex.plot_prob_curve_evo(C.sigma, epsilon)
+		if visual:
+			# Visualize the actual guess
+			print("Swowing the actual guess...")
+			matplotlib.rcParams['figure.figsize'] = [7, 7]
+			plt.title('Circle estimation after {} step.'.format(round))
+			plt.imshow(C.onImage(image))
+			plt.show()
 
-        for i in range(image.shape[0]):
-            for j in range(image.shape[1]):
+	if visual:
+		# Visualize the final guess
+		print("Swowing the final guess...")
+		matplotlib.rcParams['figure.figsize'] = [7, 7]
+		plt.title('Final estimation.')
+		plt.imshow(C.onImage(originalImage))
+		plt.show()
 
-                if (image[i, j] == 255 and (dk := ex.deltak_evo(i, j,
-                                                                C)) < 3000):  # la seconda condizione è messa per dare un significativo speedup
-                    # dk = ex.deltak_evo(i,j,C)
-                    M.append([i ** 2 + j ** 2, i, j, 1])
-                    dk_1.append(dk)
-
-        print("Sigma = {}.\n".format(C.sigma))
-
-        wk_1 = np.array([ex.wk_evo(d, C.sigma, epsilon) for d in dk_1])
-        wk_2 = np.array([ex.wk_pro(d, C.sigma, epsilon) for d in dk_1])
-
-        W = np.diag(wk_1)
-
-        v = ma.computeEigenvector(M, W)
-
-        C = ma.updateCircle(v)
-
-        C.sigma = ex.updateSigma(wk_2, dk_1)  # np.sum(np.array(dk_1)*wk_1)/np.sum(wk_1)#update sigma
-
-        print(C.cx)
-
-        if visual:
-            # visualize the actual guess
-            matplotlib.rcParams['figure.figsize'] = [7, 7]
-            plt.title('Circle estimation after {} step.'.format(_ + 1))
-            plt.imshow(C.onImage(image))
-            plt.show()
-
-    if visualFinal:
-        # visualize the actual guess
-        matplotlib.rcParams['figure.figsize'] = [7, 7]
-        plt.title('Final estimation')
-        plt.imshow(C.onImage(image))
-        plt.show()
+	print("Final guess returned.")
+	print("\n --- END OF E.M. ALGORITHM --- ")
+	return C
 
 
-for i in range(1, 10):  # loop in the DallE2-generated database
-    print("Image {}".format(i) + ".\n")
-    image = cv2.imread("./../../Samples/DallE2/DallE2_{}.png".format(i), 0)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
+if __name__ == "__main__":  # Execute a test in the case the algorithm is executed as a script
+	for i in range(1, 10):  # loop in the DallE2-generated database
+		print("\n#####	    Image {}".format(i) + ".\n      #####")
+		image = cv2.imread("./../../Samples/DallE2/DallE2_{}.png".format(i), 0)
+		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
 
-    C = guess3evo(image)
-    rounds = 10
+		C = interactiveGuess(image)
+		rounds = 10
 
-    EM_evo(image, C, rounds, visual=0, visualFinal=1, erase=0)
+		EM(image, C, rounds = 10, visual=0, erase=1)

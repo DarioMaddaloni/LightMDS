@@ -10,9 +10,11 @@ def computeEigenvector(M, W):
 	return eigVectors[:, [np.argmin(eigValues)]]#np.argmin ci da la posizione ddell'autovalore minimo. Dovremmo forse considerare l'autovalore minore ma in modulo? In ogni caso l'uotput è un vettore n x 1'
 
 
-def updateCircle(v):#forse input sarà un vettore?
+def updateCircle(C, v):#forse input sarà un vettore?
 	v = [v[i][0] for i in range(4)]
-	return circle(updateCx(v[0], v[1]), updateCy(v[0], v[2]), updateRadius(v[0], v[1], v[2], v[3]))#sostituire con oggetto della classe circle
+	C.cx = updateCx(v[0], v[1])
+	C.cy = updateCy(v[0], v[2])
+	C.r = updateRadius(v[0], v[1], v[2], v[3])
 
 def updateCx(v1, v2):
 	return -v2/(2*v1) #Ritorna una lista... Lunga uno con solo il valore..
