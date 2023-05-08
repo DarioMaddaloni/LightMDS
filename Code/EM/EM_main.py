@@ -2,9 +2,14 @@
 
 import sys
 
+import cv2
+import matplotlib
+import numpy as np
+from matplotlib import pyplot as plt
+
 sys.path.insert(0, './../..')
 from Code.import_file import *
-from Code.circle_lib import circle
+from Code.geometry_lib import circle
 from Code.eraser_lib import eraser
 from Code.show_lib import *
 import expectation_lib as ex

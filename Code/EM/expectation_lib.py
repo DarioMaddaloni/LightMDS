@@ -1,10 +1,10 @@
 from Code.import_file import *
 from Code.show_lib import *
-from Code.circle_lib import *
+from Code.geometry_lib import *
 
 
 def deltak_evo(xk, yk, circleObj): #not returning the rk_quand since no more needed
-	cx, cy, r = circleObj.cx, circleObj.cy, circleObj.r
+	cx, cy, r = circleObj.center.x, circleObj.center.y, circleObj.r
 	return np.abs( (xk-cx)**2 + (yk - cy)**2 - r**2 )
 
 

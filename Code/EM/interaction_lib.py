@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 import cv2
 import math
-from Code.circle_lib import circle
+from Code.geometry_lib import circle
 
 
 def tellme(s):

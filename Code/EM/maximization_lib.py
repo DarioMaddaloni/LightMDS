@@ -1,5 +1,5 @@
 from Code.import_file import *
-from Code.circle_lib import *
+from Code.geometry_lib import *
 
 
 def computeEigenvector(M, W):
@@ -12,8 +12,8 @@ def computeEigenvector(M, W):
 
 def updateCircle(C, v):#forse input sarà un vettore?
 	v = [v[i][0] for i in range(4)]
-	C.cx = updateCx(v[0], v[1])
-	C.cy = updateCy(v[0], v[2])
+	C.center.x = updateCx(v[0], v[1])
+	C.center.y = updateCy(v[0], v[2])
 	C.r = updateRadius(v[0], v[1], v[2], v[3])
 
 def updateCx(v1, v2):
