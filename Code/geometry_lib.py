@@ -22,15 +22,17 @@ class circle:
 		self.r = r
 		self.sigma = sigma
 		self.epsilon = epsilon
-		self.l00 = 0
-		self.l1m1 = 0
-		self.l10 = 0
-		self.l11 = 0
-		self.l2m2 = 0
-		self.l2m1 = 0
-		self.l20 = 0
-		self.l21 = 0
-		self.l22 = 0
+
+		# Coefficients, one coordinate for each layer, using only the 0-th coordinate for grayscale images
+		self.l00 = np.zeros(shape = (3), dtype=float)
+		self.l1m1 = np.zeros(shape = (3), dtype=float)
+		self.l10 = np.zeros(shape = (3), dtype=float)
+		self.l11 = np.zeros(shape = (3), dtype=float)
+		self.l2m2 = np.zeros(shape = (3), dtype=float)
+		self.l2m1 = np.zeros(shape = (3), dtype=float)
+		self.l20 = np.zeros(shape = (3), dtype=float)
+		self.l21 = np.zeros(shape = (3), dtype=float)
+		self.l22 = np.zeros(shape = (3), dtype=float)
 
 	def __contains__(self, P:point):
 		return (P.x-self.center.x)**2 + (P.y-self.center.y)**2 < self.r**2
@@ -81,15 +83,33 @@ class circle:
 			for y in range(pixelLength):
 				P = point(x,y)
 				if P in self:
-					n = C.normalAtPoint(P)
-					image[x,y] = self.l00*self.Y00(n)+		self.l1m1*(2*np.pi/3)*self.Y1m1(n)+self.l10*(2*np.pi/3)*self.Y10(n)+self.l11*(2*np.pi/3)*self.Y11(n)+		self.l2m2*(np.pi/4)*self.Y2m2(n)+self.l2m1*(np.pi/4)*self.Y2m1(n)+self.l20*(np.pi/4)*self.Y20(n)+self.l21*(np.pi/4)*self.Y21(n)+self.l22*(np.pi/4)*self.Y22(n)
 					firstFound = True
+					n = C.normalAtPoint(P)
+					match len(image.shape):
+						case 3: # RGB image
+							for i in range(3): # i cycling through the three RGB layers
+								image[x, y, i] = self.l00[i] * self.Y00(n) + self.l1m1[i] * (2 * np.pi / 3) * self.Y1m1(
+									n) + self.l10[i] * (2 * np.pi / 3) * self.Y10(n) + self.l11[i] * (
+														  2 * np.pi / 3) * self.Y11(n) + self.l2m2[i] * (
+														  np.pi / 4) * self.Y2m2(n) + self.l2m1[i] * (
+														  np.pi / 4) * self.Y2m1(n) + self.l20[i] * (
+														  np.pi / 4) * self.Y20(n) + self.l21[i] * (
+														  np.pi / 4) * self.Y21(n) + self.l22[i] * (
+														  np.pi / 4) * self.Y22(n)
+
+						case 2: # Grayscale image
+							image[x,y] = self.l00[0]*self.Y00(n)+		self.l1m1[0]*(2*np.pi/3)*self.Y1m1(n)+self.l10[0]*(2*np.pi/3)*self.Y10(n)+self.l11[0]*(2*np.pi/3)*self.Y11(n)+		self.l2m2[0]*(np.pi/4)*self.Y2m2(n)+self.l2m1[0]*(np.pi/4)*self.Y2m1(n)+self.l20[0]*(np.pi/4)*self.Y20(n)+self.l21[0]*(np.pi/4)*self.Y21(n)+self.l22[0]*(np.pi/4)*self.Y22(n)
+						case other:
+							raise Exception("The image where to render the sphere has not the correct format of an RGB or grayscale image.")
 				else: # Since spheres are convex figures, we can skip some iterations
 					if firstFound:
 						break
 		return image
 
 	def rendered(self):
+		return self.renderedOnImage(np.zeros(shape = (pixelLength, pixelLength, 3), dtype=float))
+
+	def grayscaleRendered(self):
 		return self.renderedOnImage(np.zeros(shape = (pixelLength, pixelLength), dtype=float))
 
 	def onImage(self, image, width = 2): # return a RGB image with the grayscale original image in background and the circle guess in red
@@ -116,18 +136,24 @@ class circle:
 
 
 if __name__ == '__main__':
-	# qualche test
+	# Tests
 	C = circle(500,700,200)
 	P = point(400, 720)
 	n = C.normalAtPoint(P)
 	print(C.Y00(n),	C.Y22(n),	C.Y1m1(n),	C.Y2m1(n),	C.Y2m2(n),	C.Y10(n),	C.Y11(n),	C.Y20(n),	C.Y21(n))
 
-	C.l00=100
-	C.l1m1 = 100
-	C.l2m1 = 100
+	# RGB test
+	C.l00=np.array([10,0,10])
+	C.l1m1 = np.array([6,0,6])
+	C.l2m1 = np.array([4,0,4])
 	image = C.rendered()
-	image[:,1] = 0
-	image[1,:] = 256
-	print(image)
-	plt.imshow(image,cmap='gray')
+	plt.imshow(image, vmin=0, vmax=255)
+	plt.show()
+
+	# Grayscale test
+	C.l00 = np.array([10, 0, 0])
+	C.l1m1 = np.array([20, 0, 0])
+	C.l2m1 = np.array([50, 0, 0])
+	image = C.grayscaleRendered()
+	plt.imshow(image ,cmap='gray', vmin=0, vmax=255)
 	plt.show()
