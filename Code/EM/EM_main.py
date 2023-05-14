@@ -58,6 +58,7 @@ def preprocessing(originalImage, erase):
 		cv2.setMouseCallback(screen, eraserObj.handleMouseEvent)
 		# Show initial image
 		cv2.imshow(screen, image)
+		cv2.setWindowProperty(screen, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
 
@@ -66,7 +67,7 @@ def preprocessing(originalImage, erase):
 	return image
 
 
-def EM(originalImage, C=0, rounds=0, visual=0, erase=1):
+def EM(originalImage, C=0, rounds=0, visual=0, finalVisual=1, erase=1):
 	"""
 		originalImage := the image where to find the circle
 		C := the  guess of the circle object
@@ -153,7 +154,7 @@ def EM(originalImage, C=0, rounds=0, visual=0, erase=1):
 			plt.imshow(C.onImage(image))
 			plt.show()
 
-	if visual:
+	if finalVisual:
 		# Visualize the final guess
 		print("Swowing the final guess...")
 		matplotlib.rcParams['figure.figsize'] = [7, 7]
