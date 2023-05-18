@@ -52,15 +52,14 @@ def preprocessing(originalImage, erase):
 
 	if erase:  # Erase noise by hand
 		print("Eraser...")
-		screen = "Figure 1"
-		cv2.namedWindow(screen, cv2.WINDOW_NORMAL)
-		eraserObj = eraser(screen, image, radius=30)
-		cv2.setMouseCallback(screen, eraserObj.handleMouseEvent)
-		# Show initial image
-		cv2.imshow(screen, image)
-		cv2.setWindowProperty(screen, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
+
+		# Call eraser methods
+		e = eraser( image, alwaysRefresh=0)
+		e.connect()
+		e.show()
+
+		# Obtain the resulting image
+		image = e.close()
 
 	print(" --- END OF PREPROCESSING --- \n")
 
@@ -176,4 +175,4 @@ if __name__ == "__main__":  # Execute a test in the case the algorithm is execut
 		C = interactiveGuess(image)
 		rounds = 10
 
-		EM(image, C, rounds = 10, visual=0, erase=1)
+		EM(image, C, rounds = 10, visual=1, erase=1)
