@@ -211,7 +211,7 @@ if __name__ == '__main__':
 	print(pointsList)
 	IM = point.collectionOnImage(pointsList)
 	IM = C.onImage(IM)
-	plt.imshow(IM, vmax=255, vmin=0)
+	plt.imshow(IM, vmin= 0, vmax=255)
 	plt.show()
 
 	# Testing rendering
