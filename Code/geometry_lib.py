@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -5,7 +7,7 @@ pixelLength = 1024
 class point:
 	def __init__(self, x:int, y:int):
 		if (x<0) or (x>1024) or (y<0) or (y>1024):
-			raise Exception("Point coordinates not in interval (0, {}}).".format(pixelLength))
+			raise Exception("Point coordinates not in interval (0, {}).".format(pixelLength))
 		self.x = x
 		self.y = y
 
@@ -15,6 +17,45 @@ class point:
 		if not self.isInImage():
 			raise Exception("Point coordinates not in interval (0, {}}).".format(pixelLength))
 		return (self.x-C.center.x)**2 + (self.y-C.center.y)**2 < C.r**2
+
+	def __repr__(self):
+		return f"({self.x}, {self.y})"
+
+	def onImage(self, image, width = 10): # return a RGB image with the grayscale original image in background and the circle guess in red
+		if (len(image.shape) == 2):#grayscale image
+			output = np.zeros((image.shape[0],image.shape[1],3), dtype = np.short)
+			for i in range(image.shape[0]):
+				for j in range(image.shape[1]):
+					if image[i,j] == 255:#adding points of the image
+						for k in range(3):
+							output[i,j,k] = 255
+
+			# Adding the point
+			rad = int(np.ceil(width/2))
+			for i in range(-rad, rad +1 ):
+				for j in range(-rad, rad +1 ):
+					output[self.x+i, self.y+j, 0] = 0
+					output[self.x+i, self.y+j, 1] = 255
+					output[self.x+i, self.y+j, 2] = 0
+		else: #RGB image
+			output = image
+
+			# Adding the point
+			rad = int(np.ceil(width / 2))
+			for i in range(-rad, rad + 1):
+				for j in range(-rad, rad + 1):
+					output[self.x + i, self.y + j, 0] = 0
+					output[self.x + i, self.y + j, 1] = 255
+					output[self.x + i, self.y + j, 2] = 0
+
+		return output
+
+	@staticmethod
+	def collectionOnImage(pointsList, image = np.zeros((pixelLength, pixelLength, 3))):
+		"""Static method that prints many points on an image."""
+		for i in range(len(pointsList)):
+			image = pointsList[i].onImage(image)
+		return image
 
 class circle:
 	def __init__(self, cx: int, cy: int, r: int, sigma = 40, epsilon = 0.2): # constructor of the class
@@ -134,10 +175,46 @@ class circle:
 						output[i,j,2] = 0
 		return output
 
+	def randomPoint(self, N):
+		"Extracts a list of N points at random in the filling of the ball."
+
+		# Number of possible points
+		maxNumber = int(np.floor(2*self.r + 4* np.sum([np.sqrt(self.r**2 - i**2) for i in range(1, self.r)])))
+
+		# Points list
+		pointsList = []
+
+		for _ in range(N):
+			# Select at random the "index" of the point
+			index = np.random.randint(0, maxNumber)
+
+			# Compute the bijection and find the point
+			s = 0 # Actual sum
+			for xIndex in range(-self.r+1, self.r):
+				l = 2 * int(np.floor(np.sqrt(self.r**2 - xIndex**2)))
+				s += l
+				if s > index:
+					s -= l
+					yIndex = index-s - int(np.floor(l/2))
+					pointsList.append(point(x= self.center.x+xIndex, y= self.center.y+yIndex))
+					break
+
+		return pointsList
+
 
 if __name__ == '__main__':
 	# Tests
 	C = circle(500,700,200)
+
+	# Testing random point extraction on the filling
+	pointsList = C.randomPoint(15)
+	print(pointsList)
+	IM = point.collectionOnImage(pointsList)
+	IM = C.onImage(IM)
+	plt.imshow(IM, vmax=255, vmin=0)
+	plt.show()
+
+	# Testing rendering
 	P = point(400, 720)
 	n = C.normalAtPoint(P)
 	print(C.Y00(n),	C.Y22(n),	C.Y1m1(n),	C.Y2m1(n),	C.Y2m2(n),	C.Y10(n),	C.Y11(n),	C.Y20(n),	C.Y21(n))
