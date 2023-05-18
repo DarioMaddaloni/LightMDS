@@ -1,5 +1,4 @@
-from typing import List
-
+import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -75,6 +74,9 @@ class circle:
 		self.l21 = np.zeros(shape = (3), dtype=float)
 		self.l22 = np.zeros(shape = (3), dtype=float)
 
+	def __repr__(self):
+		return f"Circle with center ({self.center.x}, {self.center.y}) and radius {self.r}."
+
 	def __contains__(self, P:point):
 		return (P.x-self.center.x)**2 + (P.y-self.center.y)**2 < self.r**2
 
@@ -125,11 +127,11 @@ class circle:
 				P = point(x,y)
 				if P in self:
 					firstFound = True
-					n = C.normalAtPoint(P)
+					n = self.normalAtPoint(P)
 					match len(image.shape):
 						case 3: # RGB image
 							for i in range(3): # i cycling through the three RGB layers
-								image[x, y, i] = self.l00[i] * self.Y00(n) + self.l1m1[i] * (2 * np.pi / 3) * self.Y1m1(
+								image[x, y, i] = self.l00[i] * np.pi * self.Y00(n) + self.l1m1[i] * (2 * np.pi / 3) * self.Y1m1(
 									n) + self.l10[i] * (2 * np.pi / 3) * self.Y10(n) + self.l11[i] * (
 														  2 * np.pi / 3) * self.Y11(n) + self.l2m2[i] * (
 														  np.pi / 4) * self.Y2m2(n) + self.l2m1[i] * (
@@ -139,7 +141,7 @@ class circle:
 														  np.pi / 4) * self.Y22(n)
 
 						case 2: # Grayscale image
-							image[x,y] = self.l00[0]*self.Y00(n)+		self.l1m1[0]*(2*np.pi/3)*self.Y1m1(n)+self.l10[0]*(2*np.pi/3)*self.Y10(n)+self.l11[0]*(2*np.pi/3)*self.Y11(n)+		self.l2m2[0]*(np.pi/4)*self.Y2m2(n)+self.l2m1[0]*(np.pi/4)*self.Y2m1(n)+self.l20[0]*(np.pi/4)*self.Y20(n)+self.l21[0]*(np.pi/4)*self.Y21(n)+self.l22[0]*(np.pi/4)*self.Y22(n)
+							image[x,y] = self.l00[0]*np.pi*self.Y00(n)+		self.l1m1[0]*(2*np.pi/3)*self.Y1m1(n)+self.l10[0]*(2*np.pi/3)*self.Y10(n)+self.l11[0]*(2*np.pi/3)*self.Y11(n)+		self.l2m2[0]*(np.pi/4)*self.Y2m2(n)+self.l2m1[0]*(np.pi/4)*self.Y2m1(n)+self.l20[0]*(np.pi/4)*self.Y20(n)+self.l21[0]*(np.pi/4)*self.Y21(n)+self.l22[0]*(np.pi/4)*self.Y22(n)
 						case other:
 							raise Exception("The image where to render the sphere has not the correct format of an RGB or grayscale image.")
 				else: # Since spheres are convex figures, we can skip some iterations
@@ -201,12 +203,77 @@ class circle:
 
 		return pointsList
 
+	def extimateCoefficients(self, image, N = 9):
+		"""Extimate the rendering coefficients of the sphere using N points."""
+
+		# Constructiong the list of the points
+		pointsList = self.randomPoint(N)
+
+		# Constructing the matrix A
+		A = []
+		for p in pointsList:
+			n = self.normalAtPoint(p)
+			A.append([np.pi * self.Y00(n), (2 * np.pi / 3) * self.Y1m1(n), (2 * np.pi / 3) * self.Y10(n),
+					  (2 * np.pi / 3) * self.Y11(n), (np.pi / 4) * self.Y2m2(n), (np.pi / 4) * self.Y2m1(n),
+					  (np.pi / 4) * self.Y20(n), (np.pi / 4) * self.Y21(n), (np.pi / 4) * self.Y22(n)])
+		A = np.array(A)
+
+
+		match len(image.shape):
+
+			case 3:  # RGB image
+				for i in range(3):  # i cycling through the three RGB layers
+
+					# Constructing the vector b for each layer
+					b = np.array([image[p.x, p.y, i] for p in pointsList])
+
+
+			case 2:  # Grayscale image
+
+				# Constructing the vector b
+				b = np.array([image[p.x, p.y] for p in pointsList])
+
+				# Solving the system
+				l = np.linalg.lstsq(A, b, rcond= None)[0]
+				self.l00[0] = l[0]
+				self.l1m1[0] = l[1]
+				self.l10[0] = l[2]
+				self.l11[0] = l[3]
+				self.l2m2[0] = l[4]
+				self.l2m1[0] = l[5]
+				self.l20[0] = l[6]
+				self.l21[0] = l[7]
+				self.l22[0] = l[8]
+
+			case other:
+				raise Exception(
+					"The image where to render the sphere has not the correct format of an RGB or grayscale image.")
+
 
 if __name__ == '__main__':
 	# Tests
-	C = circle(500,700,200)
 
-	# Testing random point extraction on the filling
+	# Converting image to grayscale
+	image = cv2.imread("./../Samples/DallE2/DallE2_1.png", 0)
+	image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
+	image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+	image = np.array(image)
+
+	# Showing the image
+	plt.imshow(image)
+	plt.show()
+
+	C = circle(587,432,301)
+	C.extimateCoefficients(np.zeros((1024,1024)))
+	image = C.grayscaleRendered()
+	plt.imshow(image, cmap='gray', vmin=0, vmax=255)
+	plt.show()
+
+
+
+
+	"""# Testing random point extraction on the filling
+	C = circle(500,700,200)
 	pointsList = C.randomPoint(15)
 	print(pointsList)
 	IM = point.collectionOnImage(pointsList)
@@ -233,4 +300,4 @@ if __name__ == '__main__':
 	C.l2m1 = np.array([50, 0, 0])
 	image = C.grayscaleRendered()
 	plt.imshow(image ,cmap='gray', vmin=0, vmax=255)
-	plt.show()
+	plt.show()"""
