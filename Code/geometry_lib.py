@@ -1,4 +1,3 @@
-import cv2
 import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
@@ -123,32 +122,87 @@ class circle:
 
 
 	def renderedOnImage(self, image):
+		""" Rendering the sphere on the image."""
 		for x in range(pixelLength):
-			firstFound = False
+			firstFound = False # Flag useful to speed-up the algorithm
 			for y in range(pixelLength):
 				P = point(x,y)
 				if P in self:
 					firstFound = True
 					n = self.normalAtPoint(P)
+
 					match len(image.shape):
 						case 3: # RGB image
 							for i in range(3): # i cycling through the three RGB layers
-								image[x, y, i] = self.l00[i] * np.pi * self.Y00(n) + self.l1m1[i] * (2 * np.pi / 3) * self.Y1m1(
-									n) + self.l10[i] * (2 * np.pi / 3) * self.Y10(n) + self.l11[i] * (
-														  2 * np.pi / 3) * self.Y11(n) + self.l2m2[i] * (
-														  np.pi / 4) * self.Y2m2(n) + self.l2m1[i] * (
-														  np.pi / 4) * self.Y2m1(n) + self.l20[i] * (
-														  np.pi / 4) * self.Y20(n) + self.l21[i] * (
-														  np.pi / 4) * self.Y21(n) + self.l22[i] * (
-														  np.pi / 4) * self.Y22(n)
-
+								image[x, y, i] = self.l00[i] * np.pi * self.Y00(n) + self.l1m1[i] * (2 * np.pi / 3) * self.Y1m1(n) + self.l10[i] * (2 * np.pi / 3) * self.Y10(n) + self.l11[i] * ( 2 * np.pi / 3) * self.Y11(n) + self.l2m2[i] * (
+																		 np.pi / 4) * self.Y2m2(n) + self.l2m1[i] * (
+																		 np.pi / 4) * self.Y2m1(n) + self.l20[i] * (
+																		 np.pi / 4) * self.Y20(n) + self.l21[i] * (
+																		 np.pi / 4) * self.Y21(n) + self.l22[i] * (
+																		 np.pi / 4) * self.Y22(n)
 						case 2: # Grayscale image
-							image[x,y] = self.l00[0]*np.pi*self.Y00(n)+		self.l1m1[0]*(2*np.pi/3)*self.Y1m1(n)+self.l10[0]*(2*np.pi/3)*self.Y10(n)+self.l11[0]*(2*np.pi/3)*self.Y11(n)+		self.l2m2[0]*(np.pi/4)*self.Y2m2(n)+self.l2m1[0]*(np.pi/4)*self.Y2m1(n)+self.l20[0]*(np.pi/4)*self.Y20(n)+self.l21[0]*(np.pi/4)*self.Y21(n)+self.l22[0]*(np.pi/4)*self.Y22(n)
+							image[x, y] = self.l00[0] * np.pi * self.Y00(n) + self.l1m1[0] * (
+									2 * np.pi / 3) * self.Y1m1(
+							n) + self.l10[0] * (2 * np.pi / 3) * self.Y10(n) + self.l11[0] * (2 * np.pi / 3) * self.Y11(
+							n) + self.l2m2[0] * (np.pi / 4) * self.Y2m2(n) + self.l2m1[0] * (np.pi / 4) * self.Y2m1(n) + \
+														  self.l20[0] * (np.pi / 4) * self.Y20(n) + self.l21[0] * (
+																	  np.pi / 4) * self.Y21(n) + self.l22[0] * (np.pi / 4) * self.Y22(n)
 						case other:
 							raise Exception("The image where to render the sphere has not the correct format of an RGB or grayscale image.")
 				else: # Since spheres are convex figures, we can skip some iterations
 					if firstFound:
 						break
+		return image
+
+	def fastRenderedOnImage(self, image):
+		""" Rendering ball on image faster using precomputation and iterative procedure for finding points on image"""
+		# Precomputing mu, i.e. the fixed multipliers involved in each pixel's value estimation
+		mu = np.zeros((9), dtype=float)
+		mu[0] = np.pi / np.sqrt(4 * np.pi)
+		mu[1] = (2 * np.pi / 3) * np.sqrt(3 / (4 * np.pi))
+		mu[2] = (2 * np.pi / 3) * np.sqrt(3 / (4 * np.pi))
+		mu[3] = (2 * np.pi / 3) * np.sqrt(3 / (4 * np.pi))
+		mu[4] = (np.pi / 4) * 3 * np.sqrt(5 / (12 * np.pi))
+		mu[5] = (np.pi / 4) * 3 * np.sqrt(5 / (12 * np.pi))
+		mu[6] = (np.pi / 4) * 0.5 * np.sqrt(5 / (4 * np.pi))
+		mu[7] = (np.pi / 4) * 3 * np.sqrt(5 / (12 * np.pi))
+		mu[8] = (np.pi / 4) * 1.5 * np.sqrt(5 / (12 * np.pi))
+
+		# Iterate on all the points in the filling of the ball
+		for xCoordinate in range(max(0,self.center.x-self.r + 1), min(pixelLength, self.center.x+self.r)):
+			c = int(np.floor(np.sqrt(self.r ** 2 - (xCoordinate-self.center.x) ** 2)))
+			for yCoordinate in range(max(0,self.center.y-c),min(pixelLength, self.center.y+c)):
+				try:
+					n = self.normalAtPoint(point(xCoordinate, yCoordinate))
+				except:
+					continue # Catching exception in the case the point is not on the ball
+
+				# Computing normal-dependent parameters
+				Y = np.zeros((9), dtype=float)
+				Y[0] = mu[0]
+				Y[1] = mu[1] * n[1]
+				Y[2] = mu[2] * n[2]
+				Y[3] = mu[3] * n[0]
+				Y[4] = mu[4] * n[0] * n[1]
+				Y[5] = mu[5] * n[1] * n[2]
+				Y[6] = mu[6] * (3 * (n[2] ** 2) - 1)
+				Y[7] = mu[7] * n[0] * n[2]
+				Y[8] = mu[8] * ((n[0] ** 2) - (n[1] ** 2))
+
+				match len(image.shape):
+					case 3:  # RGB image
+						for i in range(3):  # i cycling through the three RGB layers
+							image[xCoordinate, yCoordinate, i] = self.l00[i] * Y[0] + self.l1m1[i] * Y[1] + self.l10[i] * Y[2] + self.l11[
+								i] * Y[3] + self.l2m2[i] * Y[4] + self.l2m1[i] * Y[5] + self.l20[i] * Y[6] + self.l21[
+												 i] * Y[7] + self.l22[i] * Y[8]
+
+					case 2:  # Grayscale image
+						image[xCoordinate, yCoordinate] = self.l00[0] * Y[0] + self.l1m1[0] * Y[1] + self.l10[0] * Y[2] + self.l11[
+							0] * Y[3] + self.l2m2[0] * Y[4] + self.l2m1[0] * Y[5] + self.l20[0] * Y[6] + self.l21[
+										  0] * Y[7] + self.l22[0] * Y[8]
+					case other:
+						raise Exception(
+							"The image where to render the sphere has not the correct format of an RGB or grayscale image.")
 		return image
 
 	def rendered(self):
@@ -189,19 +243,25 @@ class circle:
 		pointsList = []
 
 		for _ in range(N):
-			# Select at random the "index" of the point
-			index = np.random.randint(0, maxNumber)
+			flag = True
+			while flag: # Some points may be outside the image borders
+				# Select at random the "index" of the point
+				index = np.random.randint(0, maxNumber)
 
-			# Compute the bijection and find the point
-			s = 0 # Actual sum
-			for xIndex in range(-self.r+1, self.r):
-				l = 2 * int(np.floor(np.sqrt(self.r**2 - xIndex**2)))
-				s += l
-				if s > index:
-					s -= l
-					yIndex = index-s - int(np.floor(l/2))
-					pointsList.append(point(x= self.center.x+xIndex, y= self.center.y+yIndex))
-					break
+				# Compute the bijection and find the point
+				s = 0 # Actual sum
+				for xIndex in range(-self.r + 1, self.r):
+					l = 2 * int(np.floor(np.sqrt(self.r**2 - xIndex**2)))
+					s += l
+					if s > index:
+						s -= l
+						yIndex = index-s - int(np.floor(l/2))
+						if (self.center.x+xIndex in range(0, pixelLength)) and (self.center.y+yIndex in range(0,pixelLength)):
+							pointsList.append(point(x= self.center.x+xIndex, y= self.center.y+yIndex))
+							flag = False
+						else:
+							pass # In that case we must repeat another while iteration because the point is not inside the image borders
+						break
 
 		return pointsList
 
@@ -243,9 +303,6 @@ class circle:
 					self.l21[i] = l[7]
 					self.l22[i] = l[8]
 
-
-
-
 			case 2:  # Grayscale image
 
 				# Constructing the vector b
@@ -273,35 +330,8 @@ class circle:
 if __name__ == '__main__':
 	# Tests
 
-
-	# Testing estimation of coefficients
-	originalImage = np.asarray(Image.open("./../Samples/DallE2/DallE2_1.png"),dtype=np.uint8)
-	C = circle(587,432,301)
-	print("Estimating coefficients...")
-	C.extimateCoefficients(originalImage, N = 150)
-
-	matplotlib.rcParams['figure.figsize'] = [25, 25]
-	plt.subplot(131)
-	plt.title('Original image')
-	plt.imshow(originalImage)
-	plt.subplot(132)
-	plt.title('Rendered ball on image')
-	print("Rendering ball on image...")
-	plt.imshow(C.renderedOnImage(originalImage))
-	plt.subplot(133)
-	print("Rendering image in black background...")
-	plt.title('Rendered image in black background')
-	plt.imshow(C.rendered(), vmin=0, vmax=255)
-	plt.show()
-
-
-
-
-
-
-
-	"""# Testing random point extraction on the filling
-	C = circle(500,700,200)
+	"""Testing random point extraction on the filling"""
+	"""C = circle(500,700,200)
 	pointsList = C.randomPoint(15)
 	print(pointsList)
 	IM = point.collectionOnImage(pointsList)
@@ -329,3 +359,44 @@ if __name__ == '__main__':
 	image = C.grayscaleRendered()
 	plt.imshow(image ,cmap='gray', vmin=0, vmax=255)
 	plt.show()"""
+
+	"""Testing estimation of coefficients"""
+
+	# Opening the image and defining a circle (values for center and radius chosen carefully)
+	originalImage = np.asarray(Image.open("./../Samples/DallE2/DallE2_1.png"), dtype=np.uint8)
+	C = circle(587, 432, 301)
+
+	# Estimating the coefficients
+	print("Estimating coefficients...")
+	C.extimateCoefficients(originalImage, N=150)
+
+
+
+
+	# Plotting original and rendered images comparing fast and previous algorithm for rendering
+	import time
+
+	matplotlib.rcParams['figure.figsize'] = [25, 25]
+
+	plt.subplot(131)
+	plt.title('Original image')
+	plt.imshow(originalImage)
+
+	plt.subplot(132)
+	plt.title('Rendered ball on image')
+	print("Rendering ball on image...")
+	start = time.time()
+	rendered = C.renderedOnImage(originalImage)
+	end = time.time()
+	print(f"Image rendered in {end - start} s")
+	plt.imshow(rendered)
+
+	plt.subplot(133)
+	print("Fast rendering image...")
+	plt.title('Rendered image in black background')
+	start = time.time()
+	fastRendered = C.fastRenderedOnImage(originalImage)
+	end = time.time()
+	print(f"Image fast rendered in {end - start} s")
+	plt.imshow(fastRendered)
+	plt.show()

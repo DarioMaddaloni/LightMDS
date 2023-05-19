@@ -88,7 +88,7 @@ def EM(originalImage, C=0, rounds=0, visual=0, finalVisual=1, erase=1):
 
 	if visual:
 		# Plotting the processed image also displaying the initial guess
-		print("Showing rocessed image with initial circle guess...")
+		print("Showing processed image with initial circle guess...")
 		matplotlib.rcParams['figure.figsize'] = [15, 15]
 		plt.title('Processed image with initial circle guess.')
 		plt.imshow(C.onImage(image))
@@ -170,8 +170,7 @@ def EM(originalImage, C=0, rounds=0, visual=0, finalVisual=1, erase=1):
 if __name__ == "__main__":  # Execute a test in the case the algorithm is executed as a script
 	for i in range(1, 10):  # loop in the DallE2-generated database
 		print("\n#####	    Image {}".format(i) + ".\n      #####")
-		image = cv2.imread("./../../Samples/DallE2/DallE2_{}.png".format(i), 0)
-		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
+		image = np.asarray(Image.open("./../../Samples/DallE2/DallE2_{}.png".format(i)), dtype=np.uint8)
 
 		C = interactiveGuess(image)
 		print(C)
