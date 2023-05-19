@@ -206,10 +206,10 @@ class circle:
 		return image
 
 	def rendered(self):
-		return self.renderedOnImage(np.zeros(shape = (pixelLength, pixelLength, 3), dtype=np.uint8))
+		return self.fastRenderedOnImage(np.zeros(shape = (pixelLength, pixelLength, 3), dtype=np.uint8))
 
 	def grayscaleRendered(self):
-		return self.renderedOnImage(np.zeros(shape = (pixelLength, pixelLength), dtype=np.uint8))
+		return self.fastRenderedOnImage(np.zeros(shape = (pixelLength, pixelLength), dtype=np.uint8))
 
 	def onImage(self, image, width = 2): # return a RGB image with the grayscale original image in background and the circle guess in red
 		if (len(image.shape) == 2):#grayscale image
