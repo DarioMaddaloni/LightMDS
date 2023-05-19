@@ -1,6 +1,8 @@
 import cv2
+import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
+from PIL import Image
 
 pixelLength = 1024
 class point:
@@ -150,10 +152,10 @@ class circle:
 		return image
 
 	def rendered(self):
-		return self.renderedOnImage(np.zeros(shape = (pixelLength, pixelLength, 3), dtype=float))
+		return self.renderedOnImage(np.zeros(shape = (pixelLength, pixelLength, 3), dtype=np.uint8))
 
 	def grayscaleRendered(self):
-		return self.renderedOnImage(np.zeros(shape = (pixelLength, pixelLength), dtype=float))
+		return self.renderedOnImage(np.zeros(shape = (pixelLength, pixelLength), dtype=np.uint8))
 
 	def onImage(self, image, width = 2): # return a RGB image with the grayscale original image in background and the circle guess in red
 		if (len(image.shape) == 2):#grayscale image
@@ -227,6 +229,22 @@ class circle:
 					# Constructing the vector b for each layer
 					b = np.array([image[p.x, p.y, i] for p in pointsList])
 
+					# Solving the system
+					l = np.linalg.lstsq(A, b, rcond=None)[0]
+
+					# Storing the results
+					self.l00[i] = l[0]
+					self.l1m1[i] = l[1]
+					self.l10[i] = l[2]
+					self.l11[i] = l[3]
+					self.l2m2[i] = l[4]
+					self.l2m1[i] = l[5]
+					self.l20[i] = l[6]
+					self.l21[i] = l[7]
+					self.l22[i] = l[8]
+
+
+
 
 			case 2:  # Grayscale image
 
@@ -235,6 +253,8 @@ class circle:
 
 				# Solving the system
 				l = np.linalg.lstsq(A, b, rcond= None)[0]
+
+				# Storing the results
 				self.l00[0] = l[0]
 				self.l1m1[0] = l[1]
 				self.l10[0] = l[2]
@@ -253,21 +273,29 @@ class circle:
 if __name__ == '__main__':
 	# Tests
 
-	# Converting image to grayscale
-	image = cv2.imread("./../Samples/DallE2/DallE2_1.png", 0)
-	image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
-	image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-	image = np.array(image)
 
-	# Showing the image
-	plt.imshow(image)
-	plt.show()
-
+	# Testing estimation of coefficients
+	originalImage = np.asarray(Image.open("./../Samples/DallE2/DallE2_1.png"),dtype=np.uint8)
 	C = circle(587,432,301)
-	C.extimateCoefficients(np.zeros((1024,1024)))
-	image = C.grayscaleRendered()
-	plt.imshow(image, cmap='gray', vmin=0, vmax=255)
+	print("Estimating coefficients...")
+	C.extimateCoefficients(originalImage, N = 150)
+
+	matplotlib.rcParams['figure.figsize'] = [25, 25]
+	plt.subplot(131)
+	plt.title('Original image')
+	plt.imshow(originalImage)
+	plt.subplot(132)
+	plt.title('Rendered ball on image')
+	print("Rendering ball on image...")
+	plt.imshow(C.renderedOnImage(originalImage))
+	plt.subplot(133)
+	print("Rendering image in black background...")
+	plt.title('Rendered image in black background')
+	plt.imshow(C.rendered(), vmin=0, vmax=255)
 	plt.show()
+
+
+
 
 
 

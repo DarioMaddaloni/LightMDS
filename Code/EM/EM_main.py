@@ -16,6 +16,7 @@ import expectation_lib as ex
 import maximization_lib as ma
 from interaction_lib import interactiveGuess
 from scipy.ndimage import gaussian_filter
+from PIL import Image
 
 
 def preprocessing(originalImage, erase):
@@ -167,7 +168,7 @@ def EM(originalImage, C=0, rounds=0, visual=0, finalVisual=1, erase=1):
 
 
 if __name__ == "__main__":  # Execute a test in the case the algorithm is executed as a script
-	"""for i in range(1, 10):  # loop in the DallE2-generated database
+	for i in range(1, 10):  # loop in the DallE2-generated database
 		print("\n#####	    Image {}".format(i) + ".\n      #####")
 		image = cv2.imread("./../../Samples/DallE2/DallE2_{}.png".format(i), 0)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
@@ -176,30 +177,6 @@ if __name__ == "__main__":  # Execute a test in the case the algorithm is execut
 		print(C)
 		rounds = 10
 
-		EM(image, C, rounds = 10, visual=1, erase=1)"""
+		EM(image, C, rounds = 10, visual=1, erase=1)
 
 
-	# Converting image to grayscale
-	originalImage = cv2.imread("./../../Samples/DallE2/DallE2_1.png", 0)
-	originalImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2RGBA)
-	originalImage = cv2.cvtColor(originalImage, cv2.COLOR_RGB2GRAY)
-	originalImage = np.array(originalImage)
-
-	C = circle(587,432,301)
-	print("Estimating coefficients...")
-	C.extimateCoefficients(originalImage, N = 150)
-
-	matplotlib.rcParams['figure.figsize'] = [25, 25]
-
-	plt.subplot(131)
-	plt.title('Original image')
-	plt.imshow(originalImage, cmap='gray', vmin= 0, vmax= 255)
-	plt.subplot(132)
-	plt.title('Rendered ball on image')
-	print("Rendering ball on image...")
-	plt.imshow(C.renderedOnImage(originalImage), cmap='gray', vmin= 0, vmax= 255)
-	plt.subplot(133)
-	print("Rendering image in black background...")
-	plt.title('Rendered image in black background')
-	plt.imshow(C.grayscaleRendered(), cmap='gray', vmin= 0, vmax= 255)
-	plt.show()
