@@ -6,17 +6,17 @@ from PIL import Image
 pixelLength = 1024
 class point:
 	def __init__(self, x:int, y:int):
-		if (x<0) or (x>1024) or (y<0) or (y>1024):
-			raise Exception("Point coordinates not in interval (0, {}).".format(pixelLength))
+		#if (x<0) or (x>1024) or (y<0) or (y>1024):
+		#	raise Exception("Point coordinates not in interval (0, {}).".format(pixelLength))
 		self.x = x
 		self.y = y
 
 	def isInImage(self):
-		return not((self.x<0) or (self.x>1024) or (self.y<0) or (self.y>1024))
+		return not((self.x<0) or (self.x>=1024) or (self.y<0) or (self.y>=1024))
 
 	def belongsToCircle(self, C):
-		if not self.isInImage():
-			raise Exception("Point coordinates not in interval (0, {}}).".format(pixelLength))
+		#if not self.isInImage():
+		#	raise Exception("Point coordinates not in interval (0, {}}).".format(pixelLength))
 		return (self.x-C.center.x)**2 + (self.y-C.center.y)**2 < C.r**2
 
 	def __repr__(self):
@@ -83,15 +83,14 @@ class circle:
 		return (P.x-self.center.x)**2 + (P.y-self.center.y)**2 < self.r**2
 
 	def normalAtPoint(self, P:point):# Returns the normal vector in the point P of the sphere
-		if not P.belongsToCircle(self):
-			print("ciao");
-			raise Exception("The point does not belong to the circle.")
-		else:
-			n = np.zeros(3, dtype=float)
-			n[0] = P.x-self.center.x
-			n[1] = P.y-self.center.y
-			n[2] = np.sqrt(self.r**2-(n[0])**2-(n[1])**2)
-			return n / np.linalg.norm(n)
+		#if not P.belongsToCircle(self):
+		#	raise Exception("The point does not belong to the circle.")
+		#else:
+		n = np.zeros(3, dtype=float)
+		n[0] = P.x-self.center.x
+		n[1] = P.y-self.center.y
+		n[2] = np.sqrt(self.r**2-(n[0])**2-(n[1])**2)
+		return n / np.linalg.norm(n)
 
 	def Y00(self, n):
 		return 1/np.sqrt( 4 * np.pi )
@@ -195,18 +194,21 @@ class circle:
 		for xCoordinate in range(self.center.x-self.r + 1, self.center.x+1):
 			d = int(np.floor(self.center.x - xCoordinate))
 			c = int(np.floor(np.sqrt(self.r ** 2 - (d) ** 2)))
-			addx = d
+			addx = d #distance between self.center.x and xCoordinate
 			#print(f"d = {d}")
 			for yCoordinate in range(self.center.y-c , self.center.y+1):
-				addy = int(np.floor(self.center.y - yCoordinate))
-
-				try:
-					n = self.normalAtPoint(point(xCoordinate, yCoordinate))
-					n1 = np.array([n[0], -n[1], n[2]]) #xCoordinate1 = xCoordinate, yCoordinate1 = yCoordinate + 2*addy
-					n2 = np.array([-n[0], n[1], n[2]]) #xCoordinate1 = xCoordinate + 2addx, yCoordinate = yCoordinate
-					n3 = np.array([-n[0], -n[1], n[2]]) #xCoordinate1 = xCoordinate + 2addx, yCoordinate = yCoordinate + 2*addy
-				except:
-					continue # Catching exception in the case the point is not on the ball
+				addy = int(np.floor(self.center.y - yCoordinate)) #distance between self.center.y and yCoordinate
+				flag0 = point(xCoordinate, yCoordinate).isInImage() #if the point is in the image
+				flag1 = point(xCoordinate, yCoordinate+2*addy).isInImage() #if the point is in the image
+				flag2 = point(xCoordinate+2*addx, yCoordinate).isInImage() #if the point is in the image
+				flag3 = point(xCoordinate+2*addx, yCoordinate+2*addy).isInImage() #if the point is in the image
+				#try:
+				n = self.normalAtPoint(point(xCoordinate, yCoordinate)) #xCoordinate1 = xCoordinate, yCoordinate1 = yCoordinate
+				n1 = np.array([n[0], -n[1], n[2]]) #xCoordinate1 = xCoordinate, yCoordinate1 = yCoordinate + 2*addy
+				n2 = np.array([-n[0], n[1], n[2]]) #xCoordinate1 = xCoordinate + 2addx, yCoordinate = yCoordinate
+				n3 = np.array([-n[0], -n[1], n[2]]) #xCoordinate1 = xCoordinate + 2addx, yCoordinate = yCoordinate + 2*addy
+				#except:
+				#	continue # Catching exception in the case the point is not on the ball
 
 				# Computing normal-dependent parameters
 				Y = np.zeros((9), dtype=float)
@@ -237,10 +239,10 @@ class circle:
 									 self.l2m1[i] * Y[5]
 							val13 = -val02
 							
-							image[xCoordinate, yCoordinate, i] = val0123 + val01 + val03 + val02
-							image[xCoordinate, yCoordinate+2*addy, i] = val0123 + val01 + val12 + val13
-							image[xCoordinate+2*addx, yCoordinate, i] = val0123 + val23 + val12 + val02
-							image[xCoordinate+2*addx, yCoordinate+2*addy, i] = val0123 + val23 + val03 + val13
+							if flag0: image[xCoordinate, yCoordinate, i] = val0123 + val01 + val03 + val02
+							if flag1: image[xCoordinate, yCoordinate+2*addy, i] = val0123 + val01 + val12 + val13
+							if flag2: image[xCoordinate+2*addx, yCoordinate, i] = val0123 + val23 + val12 + val02
+							if flag3: image[xCoordinate+2*addx, yCoordinate+2*addy, i] = val0123 + val23 + val03 + val13
 
 					case 2:  # Grayscale image
 							val0123 =	 self.l00[i] * Y[0] + \
@@ -256,10 +258,10 @@ class circle:
 									 self.l2m1[i] * Y[5]
 							val13 = -val02
 							
-							image[xCoordinate, yCoordinate] = val0123 + val01 + val03 + val02
-							image[xCoordinate, yCoordinate+2*addy] = val0123 + val01 + val12 + val13
-							image[xCoordinate+2*addx, yCoordinate] = val0123 + val23 + val12 + val02
-							image[xCoordinate+2*addx, yCoordinate+2*addy] = val0123 + val23 + val03 + val13
+							if flag0: image[xCoordinate, yCoordinate] = val0123 + val01 + val03 + val02
+							if flag1: image[xCoordinate, yCoordinate+2*addy] = val0123 + val01 + val12 + val13
+							if flag2: image[xCoordinate+2*addx, yCoordinate] = val0123 + val23 + val12 + val02
+							if flag3: image[xCoordinate+2*addx, yCoordinate+2*addy] = val0123 + val23 + val03 + val13
 					case other:
 						raise Exception(
 							"The image where to render the sphere has not the correct format of an RGB or grayscale image.")
@@ -443,10 +445,10 @@ if __name__ == '__main__':
 
 	matplotlib.rcParams['figure.figsize'] = [25, 25]
 
-	plt.subplot(121)
+	plt.subplot(131)
 	plt.title('Original image')
 	plt.imshow(originalImage)
-	"""
+
 	plt.subplot(132)
 	plt.title('Rendered ball on image')
 	print("Rendering ball on image...")
@@ -455,8 +457,8 @@ if __name__ == '__main__':
 	end = time.time()
 	print(f"Image rendered in {end - start} s")
 	plt.imshow(rendered)
-	"""
-	plt.subplot(122)
+
+	plt.subplot(133)
 	print("Fast rendering image...")
 	plt.title('Rendered image in black background')
 	start = time.time()
