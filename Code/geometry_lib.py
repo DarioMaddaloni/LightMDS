@@ -13,6 +13,7 @@ class point:
 
 	def isInImage(self):
 		return not((self.x<0) or (self.x>1024) or (self.y<0) or (self.y>1024))
+
 	def belongsToCircle(self, C):
 		if not self.isInImage():
 			raise Exception("Point coordinates not in interval (0, {}}).".format(pixelLength))
@@ -21,7 +22,7 @@ class point:
 	def __repr__(self):
 		return f"({self.x}, {self.y})"
 
-	def onImage(self, image, width = 10): # return a RGB image with the grayscale original image in background and the circle guess in red
+	def onImage(self, image, width = 10): #return a RGB image with the grayscale original image in background and the circle guess in red
 		if (len(image.shape) == 2):#grayscale image
 			output = np.zeros((image.shape[0],image.shape[1],3), dtype = np.short)
 			for i in range(image.shape[0]):
@@ -87,15 +88,15 @@ class circle:
 		else:
 			n = np.zeros(3, dtype=float)
 			n[0] = P.x-self.center.x
-			n[1] =P.y-self.center.y
-			n[2] = np.sqrt(self.r**2-(P.x-self.center.x)**2-(P.y-self.center.y)**2)
+			n[1] = P.y-self.center.y
+			n[2] = np.sqrt(self.r**2-(n[0])**2-(n[1])**2)
 			return n / np.linalg.norm(n)
 
 	def Y00(self, n):
-		return 1/np.sqrt(4*np.pi)
+		return 1/np.sqrt( 4 * np.pi )
 
 	def Y1m1(self, n):
-		return np.sqrt( 3/( 4*np.pi ) ) * n[1]
+		return np.sqrt(3 / ( 4 * np.pi ) ) * n[1]
 
 	def Y10(self, n):
 		return np.sqrt(3 / (4 * np.pi)) * n[2]
@@ -134,19 +135,26 @@ class circle:
 					match len(image.shape):
 						case 3: # RGB image
 							for i in range(3): # i cycling through the three RGB layers
-								image[x, y, i] = self.l00[i] * np.pi * self.Y00(n) + self.l1m1[i] * (2 * np.pi / 3) * self.Y1m1(n) + self.l10[i] * (2 * np.pi / 3) * self.Y10(n) + self.l11[i] * ( 2 * np.pi / 3) * self.Y11(n) + self.l2m2[i] * (
-																		 np.pi / 4) * self.Y2m2(n) + self.l2m1[i] * (
-																		 np.pi / 4) * self.Y2m1(n) + self.l20[i] * (
-																		 np.pi / 4) * self.Y20(n) + self.l21[i] * (
-																		 np.pi / 4) * self.Y21(n) + self.l22[i] * (
-																		 np.pi / 4) * self.Y22(n)
+								#n is the normal vector on the point P
+								image[x, y, i] = self.l00[i] * np.pi * self.Y00(n) + \
+												 self.l1m1[i] * (2 * np.pi / 3) * self.Y1m1(n) + \
+												 self.l10[i] * (2 * np.pi / 3) * self.Y10(n) + \
+												 self.l11[i] * ( 2 * np.pi / 3) * self.Y11(n) + \
+												 self.l2m2[i] * (np.pi / 4) * self.Y2m2(n) + \
+												 self.l2m1[i] * (np.pi / 4) * self.Y2m1(n) + \
+												 self.l20[i] * (np.pi / 4) * self.Y20(n) + \
+												 self.l21[i] * (np.pi / 4) * self.Y21(n) + \
+												 self.l22[i] * (np.pi / 4) * self.Y22(n)
 						case 2: # Grayscale image
-							image[x, y] = self.l00[0] * np.pi * self.Y00(n) + self.l1m1[0] * (
-									2 * np.pi / 3) * self.Y1m1(
-							n) + self.l10[0] * (2 * np.pi / 3) * self.Y10(n) + self.l11[0] * (2 * np.pi / 3) * self.Y11(
-							n) + self.l2m2[0] * (np.pi / 4) * self.Y2m2(n) + self.l2m1[0] * (np.pi / 4) * self.Y2m1(n) + \
-														  self.l20[0] * (np.pi / 4) * self.Y20(n) + self.l21[0] * (
-																	  np.pi / 4) * self.Y21(n) + self.l22[0] * (np.pi / 4) * self.Y22(n)
+							image[x, y] =	 self.l00[0] * np.pi * self.Y00(n) + \
+											 self.l1m1[0] * (2 * np.pi / 3) * self.Y1m1(n) + \
+											 self.l10[0] * (2 * np.pi / 3) * self.Y10(n) + \
+											 self.l11[0] * (2 * np.pi / 3) * self.Y11(n) + \
+											 self.l2m2[0] * (np.pi / 4) * self.Y2m2(n) + \
+											 self.l2m1[0] * (np.pi / 4) * self.Y2m1(n) + \
+											 self.l20[0] * (np.pi / 4) * self.Y20(n) + \
+											 self.l21[0] * ( np.pi / 4) * self.Y21(n) + \
+											 self.l22[0] * (np.pi / 4) * self.Y22(n)
 						case other:
 							raise Exception("The image where to render the sphere has not the correct format of an RGB or grayscale image.")
 				else: # Since spheres are convex figures, we can skip some iterations
@@ -158,6 +166,7 @@ class circle:
 		""" Rendering ball on image faster using precomputation and iterative procedure for finding points on image"""
 		# Precomputing mu, i.e. the fixed multipliers involved in each pixel's value estimation
 		mu = np.zeros((9), dtype=float)
+		"""
 		mu[0] = np.pi / np.sqrt(4 * np.pi)
 		mu[1] = (2 * np.pi / 3) * np.sqrt(3 / (4 * np.pi))
 		mu[2] = (2 * np.pi / 3) * np.sqrt(3 / (4 * np.pi))
@@ -167,7 +176,18 @@ class circle:
 		mu[6] = (np.pi / 4) * 0.5 * np.sqrt(5 / (4 * np.pi))
 		mu[7] = (np.pi / 4) * 3 * np.sqrt(5 / (12 * np.pi))
 		mu[8] = (np.pi / 4) * 1.5 * np.sqrt(5 / (12 * np.pi))
-
+		"""
+		mu[0] = np.pi / np.sqrt(4 * np.pi)
+		mu[1] = (2 * np.pi / 3) * np.sqrt(3 / (4 * np.pi))
+		mu[2] = mu[1]
+		mu[3] = mu[1]
+		val = (np.pi / 4) * np.sqrt(5 / (12 * np.pi))
+		mu[4] = 3 * val
+		mu[5] = mu[4]
+		mu[6] = 0.5 * np.sqrt(3) * val
+		mu[7] = mu[4]
+		mu[8] = 1.5 * val
+		start = time.time();
 		# Iterate on all the points in the filling of the ball
 		for xCoordinate in range(max(0,self.center.x-self.r + 1), min(pixelLength, self.center.x+self.r)):
 			c = int(np.floor(np.sqrt(self.r ** 2 - (xCoordinate-self.center.x) ** 2)))
@@ -192,17 +212,31 @@ class circle:
 				match len(image.shape):
 					case 3:  # RGB image
 						for i in range(3):  # i cycling through the three RGB layers
-							image[xCoordinate, yCoordinate, i] = self.l00[i] * Y[0] + self.l1m1[i] * Y[1] + self.l10[i] * Y[2] + self.l11[
-								i] * Y[3] + self.l2m2[i] * Y[4] + self.l2m1[i] * Y[5] + self.l20[i] * Y[6] + self.l21[
-												 i] * Y[7] + self.l22[i] * Y[8]
+							image[xCoordinate, yCoordinate, i] = self.l00[i] * Y[0] + \
+																 self.l1m1[i] * Y[1] + \
+																 self.l10[i] * Y[2] + \
+																 self.l11[i] * Y[3] + \
+																 self.l2m2[i] * Y[4] + \
+																 self.l2m1[i] * Y[5] + \
+																 self.l20[i] * Y[6] + \
+																 self.l21[i] * Y[7] + \
+																 self.l22[i] * Y[8]
 
 					case 2:  # Grayscale image
-						image[xCoordinate, yCoordinate] = self.l00[0] * Y[0] + self.l1m1[0] * Y[1] + self.l10[0] * Y[2] + self.l11[
-							0] * Y[3] + self.l2m2[0] * Y[4] + self.l2m1[0] * Y[5] + self.l20[0] * Y[6] + self.l21[
-										  0] * Y[7] + self.l22[0] * Y[8]
+						image[xCoordinate, yCoordinate] =	 self.l00[0] * Y[0] + \
+															 self.l1m1[0] * Y[1] + \
+															 self.l10[0] * Y[2] + \
+															 self.l11[0] * Y[3] + \
+															 self.l2m2[0] * Y[4] + \
+															 self.l2m1[0] * Y[5] + \
+															 self.l20[0] * Y[6] + \
+															 self.l21[0] * Y[7] + \
+															 self.l22[0] * Y[8]
 					case other:
 						raise Exception(
 							"The image where to render the sphere has not the correct format of an RGB or grayscale image.")
+		end = time.time();
+		print(f"time to cycle {end - start} s")
 		return image
 
 	def rendered(self):
@@ -211,7 +245,7 @@ class circle:
 	def grayscaleRendered(self):
 		return self.fastRenderedOnImage(np.zeros(shape = (pixelLength, pixelLength), dtype=np.uint8))
 
-	def onImage(self, image, width = 2): # return a RGB image with the grayscale original image in background and the circle guess in red
+	def onImage(self, image, width = 2): #return a RGB image with the grayscale original image in background and the circle guess in red
 		if (len(image.shape) == 2):#grayscale image
 			output = np.zeros((image.shape[0],image.shape[1],3), dtype = np.short)
 			for i in range(image.shape[0]):
@@ -237,7 +271,7 @@ class circle:
 		"Extracts a list of N points at random in the filling of the ball."
 
 		# Number of possible points
-		maxNumber = int(np.floor(2*self.r + 4* np.sum([np.sqrt(self.r**2 - i**2) for i in range(1, self.r)])))
+		maxNumber = int(np.floor(2*self.r + 4 * np.sum([np.sqrt(self.r**2 - i**2) for i in range(1, self.r)])))
 
 		# Points list
 		pointsList = []
@@ -275,15 +309,15 @@ class circle:
 		A = []
 		for p in pointsList:
 			n = self.normalAtPoint(p)
-			A.append([np.pi * self.Y00(n), (2 * np.pi / 3) * self.Y1m1(n), (2 * np.pi / 3) * self.Y10(n),
-					  (2 * np.pi / 3) * self.Y11(n), (np.pi / 4) * self.Y2m2(n), (np.pi / 4) * self.Y2m1(n),
-					  (np.pi / 4) * self.Y20(n), (np.pi / 4) * self.Y21(n), (np.pi / 4) * self.Y22(n)])
+			A.append([ np.pi * self.Y00(n), 			(2 * np.pi / 3) * self.Y1m1(n), 	(2 * np.pi / 3) * self.Y10(n),
+					   (2 * np.pi / 3) * self.Y11(n), 	(np.pi / 4) * self.Y2m2(n), 		(np.pi / 4) * self.Y2m1(n),
+					   (np.pi / 4) * self.Y20(n), 		(np.pi / 4) * self.Y21(n), 			(np.pi / 4) * self.Y22(n)]
+					)
 		A = np.array(A)
 
 
 		match len(image.shape):
-
-			case 3:  # RGB image
+			case 3: # RGB image
 				for i in range(3):  # i cycling through the three RGB layers
 
 					# Constructing the vector b for each layer
