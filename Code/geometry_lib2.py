@@ -179,7 +179,8 @@ class circle:
 		mu[7] = (np.pi / 4) * 3 * np.sqrt(5 / (12 * np.pi))
 		mu[8] = (np.pi / 4) * 1.5 * np.sqrt(5 / (12 * np.pi))
 		"""
-
+		#We can reduce the number of computation by observing some patterns
+		#Note that this improvement is performed only once
 		mu[0] = np.pi / np.sqrt(4 * np.pi)
 		mu[1] = (2 * np.pi / 3) * np.sqrt(3 / (4 * np.pi))
 		mu[2] = mu[1]
@@ -192,10 +193,10 @@ class circle:
 		mu[8] = 1.5 * val
 		start = time.time();
 
-		# Iterate on all the points in the filling of the ball
-		for xCoordinate in range(self.center.x-self.r + 1, self.center.x+1):
-			d = int(np.floor(self.center.x - xCoordinate))
-			c = int(np.floor(np.sqrt(self.r ** 2 - (d) ** 2)))
+		# Iterate on all the points in the down-right of the ball
+		for xCoordinate in range(self.center.x-self.r + 1, self.center.x+1): #iterate on the radius
+			d = int(np.floor(self.center.x - xCoordinate)) #distance from the point we are dealing with and the center (in x coordinate)
+			c = int(np.floor(np.sqrt(self.r ** 2 - (d) ** 2))) #distance from the center and the minimum y that is related to the xCoordinate
 			addx = d #distance between self.center.x and xCoordinate
 			#print(f"d = {d}")
 			for yCoordinate in range(self.center.y-c , self.center.y+1):
@@ -224,7 +225,8 @@ class circle:
 				Y[4] = mu[4] * n[0] * n[1]
 				Y[5] = mu[5] * n[1] * n[2]
 				Y[7] = mu[7] * n[0] * n[2]
-				
+				#Main idea is to note the fact that the normal vector of the ball are geometrically connected
+				#So, we can save more or less 75% of the computation
 				match len(image.shape):
 					case 3:  # RGB image
 						for i in range(3):  # i cycling through the three RGB layers
