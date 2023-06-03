@@ -9,8 +9,8 @@ from matplotlib import pyplot as plt
 
 sys.path.insert(0, './../..')
 from Code.import_file import *
-from Code.geometry_lib import circle
-from Code.eraser_lib import eraser
+from Code.LightAnalisys.geometry_lib import circle
+from eraser_lib import eraser
 from Code.show_lib import *
 import expectation_lib as ex
 import maximization_lib as ma
@@ -148,7 +148,7 @@ def EM(originalImage, C=0, rounds=0, visual=0, finalVisual=1, erase=1):
 
 		if visual:
 			# Visualize the actual guess
-			print("Swowing the actual guess...")
+			print("Showing the actual guess...")
 			matplotlib.rcParams['figure.figsize'] = [7, 7]
 			plt.title('Circle estimation after {} step.'.format(round))
 			plt.imshow(C.onImage(image))
@@ -156,7 +156,7 @@ def EM(originalImage, C=0, rounds=0, visual=0, finalVisual=1, erase=1):
 
 	if finalVisual:
 		# Visualize the final guess
-		print("Swowing the final guess...")
+		print("Showing the final guess...")
 		matplotlib.rcParams['figure.figsize'] = [7, 7]
 		plt.title('Final estimation.')
 		plt.imshow(C.onImage(originalImage))
@@ -176,6 +176,6 @@ if __name__ == "__main__":  # Execute a test in the case the algorithm is execut
 		print(C)
 		rounds = 10
 
-		EM(image, C, rounds = 10, visual=1, erase=1)
+		EM(image, C, rounds = 10, visual=0, erase=1)
 
 

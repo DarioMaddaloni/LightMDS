@@ -1,6 +1,6 @@
 from Code.import_file import *
 from Code.show_lib import *
-from Code.geometry_lib import *
+from Code.LightAnalisys.geometry_lib import *
 
 
 def deltak_evo(xk, yk, circleObj): #not returning the rk_quand since no more needed

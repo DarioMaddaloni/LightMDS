@@ -1,5 +1,5 @@
 from Code.import_file import *
-from Code.geometry_lib import *
+from Code.LightAnalisys.geometry_lib import *
 
 
 def computeEigenvector(M, W):

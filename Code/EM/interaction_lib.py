@@ -5,7 +5,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import math
-from Code.geometry_lib import circle
+from Code.LightAnalisys.geometry_lib import circle
 
 
 def tellme(s):
@@ -18,7 +18,7 @@ def interactiveGuess(image, max_y_difference = 20):#guessing 3 points in the bor
 	print("\n --- START OF INTERACTIVE GUESS --- ")
 
 	plt.imshow(image)
-	
+
 	fig = plt.gcf()
 	ax = fig.gca()
 
