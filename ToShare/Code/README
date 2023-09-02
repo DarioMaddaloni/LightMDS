@@ -1,0 +1,31 @@
+./EM
+	erase_lib.py (implements an eraser class)
+		def __init_(self, image, alwaysRefresh)
+		connect(self)
+		show(self)
+		on_motion(self, event)
+		on_release(self, event)
+		close(self)
+		__name__ = 'main' (run it if you want to test it)
+	
+	expectation_lib.py
+		deltak_evo(xk, yk, circleObj)
+		wk(dk, sigma, epsilon)
+		wk_sigma(dk, sigma, epsilon)
+		plot_prob_curve_evo(sigma, p)
+	
+	interaction_lib.py
+		tellme(s)
+		interactiveGuess(image, max_y_difference)
+	
+	maximization_lib.py
+		computeEigenvector(M, W)
+		updateCircle(C, v)
+		updateCx(v1, v2)
+		updateCy(v1, v3)
+		updateRadius(v1, v2, v3, v4)
+	
+	EM_main.py
+		preprocessing(originalImage, erase)
+		EM(originalImage, C, rounds, visual, finalVisual, erase)
+		__name == "main" 
